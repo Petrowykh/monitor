@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 
+import plotly.graph_objects as go
+
 from datetime import datetime
 
 
@@ -63,6 +65,25 @@ with tab1:
 
 with tab2:
     st.subheader("🚚Пополнение")
+    fig = go.Figure(data=[go.Sankey(
+        node = dict(
+            pad = 15,
+            thickness = 20,
+            line = dict(color = "black", width = 0.5),
+            label = ["Более 1 года", "6-12 мес", "3-6 мес", "меньше 3 мес", "Более 1 года", "6-12 мес", "3-6 мес", "меньше 3 мес", "Уволены"],
+            color = ["blue", "green", "red", "brown", "blue", "green", "red", "brown", "white"],),
+        link = dict(
+            source = [0, 0, 1, 1, 2, 2, 2, 3, 3, 3],
+            target = [4, 8, 5, 8, 5, 6, 8, 6, 7, 8],
+            value =  [76, 1, 7, 1, 1, 7, 2, 21, 25, 5],
+            color = ["lightblue", "lightblue", "lightgreen", "lightgreen", "lightpink",
+               "lightpink", "lightpink", "yellow", "yellow", "yellow"]
+            )
+    )])
+    c1_t2, c2_t2 = st.columns(2)
+    with c1_t2:
+        st.header("Sankey chart of the applied filters")
+        st.plotly_chart(fig, use_container_width=True, height = 400, width=400)
 
 with tab3:
     st.subheader("📳Размещение")
