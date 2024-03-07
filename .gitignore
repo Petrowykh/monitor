@@ -1,3 +1,6 @@
+#db
+DB/
+
 __pycache__
 *.py[cod]
 *$py.class
@@ -46,3 +49,6 @@ ENV/
 !.vscode/launch.json 
 !.vscode/extensions.json 
 .history
+
+# config
+*.ini
