@@ -21,6 +21,7 @@ class Report_DF:
     def __init__(self, db, name_db, col_name) -> None:
         self.column = col_name
         self.req = db.get_full_table(name_db)
+        print('new')
         self.df = pd.DataFrame(self.req, columns=col_name)
 
     @lru_cache    

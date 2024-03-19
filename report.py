@@ -135,13 +135,13 @@ def monitor():
         with c4_t3:
             st.metric('Балкон', 55, 1)
 
-def analitics():
+def reports():
     pass
 
 def settings():
     pass
 
-def reports():
+def analitics():
     
     report_shift = Report_DF(repdb, 'report_shift', ['id', 'date_shift', 'of_day', 'shift_id', 'staff_shift', 'add', 'ill', 'vacation', 'absence', 'lines', 'pieces', 'sku', 'effect'])
 
