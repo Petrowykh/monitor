@@ -43,8 +43,8 @@ def main():
     with col_header2:
         st.image ('img\\1note.jpg')
 
-    main_menu = option_menu(None, ["Информация", "Мониторинг", "Отчет", "Анализ", 'Настройки'], 
-        icons=['info-square-fill', 'tv-fill' , "list-columns-reverse", 'clipboard2-data-fill', 'gear-fill'], 
+    main_menu = option_menu(None, ["Информация", "Штат", "Мониторинг", "Отчет", "Анализ", 'Настройки'], 
+        icons=['info-square-fill', 'list-stars', 'tv-fill' , "list-columns-reverse", 'clipboard2-data-fill', 'gear-fill'], 
         menu_icon="cast", default_index=0, orientation="horizontal")
     
     if main_menu in menu_dict.keys():   
@@ -141,12 +141,29 @@ def reports():
 def settings():
     pass
 
+def staff():
+    staff = Report_DF(repdb, 'staff', ['id', 'tab_id', 'fio', 'job', 'shift', 'date_in', 'active', 'dismiss'])
+    staff_man = staff.df['fio'][staff.df['job'] == 7].values.tolist()
+    
+    staff.df = staff.df[(staff.df['shift'] < 6) & (staff.df['job'] != 7) & (staff.df['job'] != 13)]
+
+    staff.df['date_in'] = pd.to_datetime(staff.df['date_in'])
+
+    staff.df['delta'] = (datetime.now() - staff.df['date_in']).dt.days
+
+    #print(staff.df['delta'].dt.days)
+
+
+    st.table(staff.df)
+
+    with st.sidebar:
+        st.write('Смены')
+        st.selectbox('Выберите смену', staff_man)
+
 def analitics():
     
     report_shift = Report_DF(repdb, 'report_shift', ['id', 'date_shift', 'of_day', 'shift_id', 'staff_shift', 'add', 'ill', 'vacation', 'absence', 'lines', 'pieces', 'sku', 'effect'])
-
-    # staff = Report_DF(repdb, 'staff', ['id', 'tab_id', 'fio', 'job', 'shift', 'date_in', 'active'])
-
+    
     # shift_man = {1:'Каплич', 2:'Тарасенко', 3:'Юролайть', 4:'Гаврилов', 5:'Липай'}
 
 
@@ -222,6 +239,7 @@ def analitics():
 
 menu_dict = {
     "Информация" : info,
+    "Штат" : staff,
     "Мониторинг" : monitor,
     "Отчет" : reports,
     "Анализ": analitics,
