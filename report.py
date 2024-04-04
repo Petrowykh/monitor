@@ -200,11 +200,11 @@ def reports():
         if report_save:
             peak_report_table = Report_DB_shift(PATH_DB+NAME_DB)
             staff_amount = Report_DB_staff(PATH_DB+NAME_DB)
-            #TODO define burner
+            
             list_to_save = (today.strftime('%d.%m.%Y'), income_standard, income_matrix, amount_standard, amount_matrix, amount_import, unplaced, act_bel, act_import, ill, vocation, absent, staff_amount.get_mans_shift(5)-ill-vocation-absent, overtime, text_safety, procedure.get_burden(staff_amount.get_mans_shift(5)-ill-vocation-absent, income_standard+income_matrix*10), text_incidents)
 
             
-            peak_report_table.save_report(list_to_save)           
+            peak_report_table.save_report(list_to_save, flag_report)         
             st.success('Отчет сохранен')
 
         

@@ -35,9 +35,13 @@ class Report_DF_peak_shift(Report_DF):
     pass
 
 class Report_DB_shift(Report_DB):
-    def save_report(self, list_db):
+    def save_report(self, list_db, flag):
+        print(list_db[0])
         with self.connection:
-            return self.cursor.execute("INSERT INTO peak_shift (date, income_standard, income_matrix, amount_standard, amount_matrix, amount_import, unplaced, act_bel, act_import, ill, vocation, absent, on_shift, overtime, safety, burden, incidents) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", list_db)
+            if flag:
+                self.cursor.execute(f"DELETE FROM peak_shift WHERE date='{list_db[0]}'")
+            #self.connection.commit()
+            return self.cursor.execute("INSERT INTO peak_shift (date, income_standard, income_matrix, amount_standard, amount_matrix,amount_import, unplaced, act_bel, act_import, ill, vocation, absent, on_shift, overtime, safety, burden, incidents) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", list_db)
             
 class Report_DB_staff(Report_DB):
     def get_mans_shift(self, shift):
