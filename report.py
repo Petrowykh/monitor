@@ -121,6 +121,8 @@ def reports():
     
     standard_shift, peak_shift = st.tabs(['Стандартная смена', 'Пиковая смена'])
     today = date.today()
+
+    check_data = False
     with standard_shift:
         st.header(f'Отчет стандартной смены за: {today}', divider='red')
 
@@ -128,11 +130,12 @@ def reports():
         peak_report = Report_DF_peak_shift(repdb, 'peak_shift', ['date', 'income_standard', 'income_matrix', 'amount_standard', 'amount_matrix', 'amount_import', 'unplaced', 'act_bel', 'act_import', 'ill', 'vocation', 'absent', 'on_shift', 'overtime', 'safety', 'burden', 'incidents'])
         try:
             flag_report = True    
-            today_list = peak_report.df[peak_report.df['date'] == today.strftime('%dd.%mm.%YYYY')].values.tolist()[0]
+            today_list = peak_report.df[peak_report.df['date'] == today.strftime('%d.%m.%Y')].values.tolist()[0]
+            print(today_list)
         except Exception as e:
             today_list = [0] * 17
             flag_report = False
-
+        
         df_chart = peak_report.df[['date', 'income_standard', 'income_matrix', 'amount_standard', 'amount_matrix', 'amount_import']].tail(7)
         df_chart['date'] = pd.to_datetime(df_chart['date'], format='%d.%m.%Y')
         st.header(f'Отчет пиковой смены за: {today}', divider='red')
@@ -144,25 +147,25 @@ def reports():
             income_matrix = income_col2.text_input('матрица+', placeholder='в штуках', value=today_list[2])
             st.subheader('Количество приходов')
             amount_col1, amount_col2, amount_col3 = st.columns(3)
-            amount_standard = amount_col1.number_input('Стандартный', 20, 150)
-            amount_matrix = amount_col2.number_input('Матрица+', 20, 150, 20)
-            amount_import = amount_col3.number_input('Импорт', 0, 20, 0)
+            amount_standard = amount_col1.number_input('Стандартный', 0, 150, value=today_list[3])
+            amount_matrix = amount_col2.number_input('Матрица+', 0, 150, value=today_list[4])
+            amount_import = amount_col3.number_input('Импорт', 0, 20, value=today_list[5])
             st.subheader('Матрица+             Акты')
             matrix_col, act_col1, act_col2 = st.columns(3)
-            unplaced = matrix_col.text_input('Неразмещенный', placeholder='в строках')
-            act_bel = act_col1.number_input('Белорусские поставщики', 0, 20, 0)
-            act_import = act_col2.number_input('Иппорт;', 0, 20, 0)
+            unplaced = matrix_col.text_input('Неразмещенный', value=today_list[6], placeholder='в строках')
+            act_bel = act_col1.number_input('Белорусские поставщики', 0, 20, value=today_list[7])
+            act_import = act_col2.number_input('Иппорт;', 0, 20, value=today_list[8])
             st.subheader('Штатное расписание')
             staff_col1, staff_col2, staff_col3, staff_col4 = st.columns(4)
-            ill = staff_col1.number_input('Больничный', 0, 10, 0,)
-            vocation = staff_col2.number_input('Отпуск', 0, 10, 0)
-            absent = staff_col3.number_input('Отсутствуют', 0, 10, 0)
-            overtime = staff_col4.number_input('Переработка', 0, 50, 0, placeholder='в часах')
+            ill = staff_col1.number_input('Больничный', 0, 10, value=today_list[9])
+            vocation = staff_col2.number_input('Отпуск', 0, 10, value=today_list[10])
+            absent = staff_col3.number_input('Отсутствуют', 0, 10, value=today_list[11])
+            overtime = staff_col4.number_input('Переработка', 0, 50, value=today_list[13], placeholder='в часах')
             another_col1, another_col2 = st.columns(2)
             another_safety = another_col1.toggle('Меры безопасности')
-            text_safety = another_col1.text_area('Описание проблемы', disabled=not another_safety)
+            text_safety = another_col1.text_area('Описание проблемы', value=today_list[14], disabled=not another_safety)
             another_incidents = another_col2.toggle('Инциденты')
-            text_incidents = another_col2.text_area('Описание инцидента', disabled=not another_incidents)
+            text_incidents = another_col2.text_area('Описание инцидента', value=today_list[16], disabled=not another_incidents)
             #print (peak_report.req)
         with report_col2:
             income_col1, income_col2 = st.columns(2)
@@ -183,14 +186,19 @@ def reports():
             message_button = 'Сохранить отчет'
         else:
             message_button = 'Исправить отчет'
-        report_save = st.button(message_button)
+        
+        try:
+            income_standard = int(income_standard)
+            income_matrix = int(income_matrix)
+            if income_standard > 0 and income_matrix > 0 and amount_standard > 0:
+                check_data = True
+        except Exception as e:
+            logger.warning(f'No integer data {e}')
+            check_data = False
+        
+        report_save = st.button(message_button, disabled=not check_data)
         if report_save:
             peak_report_table = Report_DB_shift(PATH_DB+NAME_DB)
-            try:
-                income_standard = int(income_standard)
-                income_matrix = int(income_matrix)
-            except Exception as e:
-                logger.warning(f'No integer data {e}')
             staff_amount = Report_DB_staff(PATH_DB+NAME_DB)
             #TODO define burner
             list_to_save = (today.strftime('%d.%m.%Y'), income_standard, income_matrix, amount_standard, amount_matrix, amount_import, unplaced, act_bel, act_import, ill, vocation, absent, staff_amount.get_mans_shift(5)-ill-vocation-absent, overtime, text_safety, procedure.get_burden(staff_amount.get_mans_shift(5)-ill-vocation-absent, income_standard+income_matrix*10), text_incidents)
