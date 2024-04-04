@@ -16,13 +16,11 @@ def period_to_2list(yp, mp: list, df_data) -> list:
                 ggg.append(i_month)
                 lfh[i_year] = sorted(ggg)
 
-    #print(dict(sorted(lfh.items())))
-
     for key in sorted(lfh.keys()):
         lfh_m = lfh_m + lfh[key]
         qy = len(lfh[key])
-    for i in range(qy):
-        lfh_y.append(key)
+        for i in range(qy):
+            lfh_y.append(key)
 
     new_list = [lfh_y]
     new_list.append(lfh_m)

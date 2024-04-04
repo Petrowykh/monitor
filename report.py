@@ -41,7 +41,7 @@ def main():
         st.image('img\logo.png')
         st.subheader(datetime.now().strftime("%d/%m/%Y %H:%M"))
     with col_header2:
-        st.image ('img\\1note.jpg')
+        st.image ('img\\1note.jpg', width=700)
 
     main_menu = option_menu(None, ["Информация", "Штат", "Мониторинг", "Отчет", "Анализ", 'Настройки'], 
         icons=['info-square-fill', 'list-stars', 'tv-fill' , "list-columns-reverse", 'clipboard2-data-fill', 'gear-fill'], 
@@ -350,7 +350,7 @@ def analitics():
 
 
     with st.sidebar:
-        st.write(datetime.now())
+       
         years_period = st.multiselect(
             'Года:', 
             sorted(report_shift.df['year_p'].unique()),
@@ -382,6 +382,8 @@ def analitics():
                                               aggfunc={'lines' : "sum", 'effect' : "mean"}).reset_index()
 
     x_ = procedure.period_to_2list(years_period, month_period, chart_data)
+
+    print(x_)
 
     col1, col2 = st.columns(2)
     with col1:
