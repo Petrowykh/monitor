@@ -24,10 +24,25 @@ class Report_DF:
         print('new')
         self.df = pd.DataFrame(self.req, columns=col_name)
 
+    
+class Report_DF_report_shift(Report_DF):
     @lru_cache    
     def prepare_df(self, date_check):
         self.df['year_p'] = self.df[date_check].apply(lambda x: x.split('.')[2])
         self.df['month_p'] = self.df[date_check].apply(lambda x: x.split('.')[1])
 
-    
+class Report_DF_peak_shift(Report_DF):
+    pass
+
+class Report_DB_shift(Report_DB):
+    def save_report(self, list_db):
+        with self.connection:
+            return self.cursor.execute("INSERT INTO peak_shift (date, income_standard, income_matrix, amount_standard, amount_matrix, amount_import, unplaced, act_bel, act_import, ill, vocation, absent, on_shift, overtime, safety, burden, incidents) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", list_db)
+            
+class Report_DB_staff(Report_DB):
+    def get_mans_shift(self, shift):
+        with self.connection:
+            return self.cursor.execute(f"SELECT count(*) FROM staff WHERE shift = {shift} and active = True").fetchone()[0]
+
+
         

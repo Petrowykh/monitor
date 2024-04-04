@@ -12,7 +12,7 @@ import numpy as np
 
 import config_ini
 from utils import procedure
-from report_db import Report_DB, Report_DF
+from report_db import *
 
 path = "config.ini"
 
@@ -118,8 +118,88 @@ def monitor():
             st.metric('Балкон', 55, 1)
 
 def reports():
-    pass
+    
+    standard_shift, peak_shift = st.tabs(['Стандартная смена', 'Пиковая смена'])
+    today = date.today()
+    with standard_shift:
+        st.header(f'Отчет стандартной смены за: {today}', divider='red')
 
+    with peak_shift:
+        peak_report = Report_DF_peak_shift(repdb, 'peak_shift', ['date', 'income_standard', 'income_matrix', 'amount_standard', 'amount_matrix', 'amount_import', 'unplaced', 'act_bel', 'act_import', 'ill', 'vocation', 'absent', 'on_shift', 'overtime', 'safety', 'burden', 'incidents'])
+        try:
+            flag_report = True    
+            today_list = peak_report.df[peak_report.df['date'] == today.strftime('%dd.%mm.%YYYY')].values.tolist()[0]
+        except Exception as e:
+            today_list = [0] * 17
+            flag_report = False
+
+        df_chart = peak_report.df[['date', 'income_standard', 'income_matrix', 'amount_standard', 'amount_matrix', 'amount_import']].tail(7)
+        df_chart['date'] = pd.to_datetime(df_chart['date'], format='%d.%m.%Y')
+        st.header(f'Отчет пиковой смены за: {today}', divider='red')
+        report_col1, def_col, report_col2 = st.columns([9, 1, 9])
+        with report_col1:
+            st.subheader('Входящий грузооборот')
+            income_col1, income_col2 = st.columns(2)
+            income_standard = income_col1.text_input('стандартный', placeholder='в штуках', value=today_list[1])
+            income_matrix = income_col2.text_input('матрица+', placeholder='в штуках', value=today_list[2])
+            st.subheader('Количество приходов')
+            amount_col1, amount_col2, amount_col3 = st.columns(3)
+            amount_standard = amount_col1.number_input('Стандартный', 20, 150)
+            amount_matrix = amount_col2.number_input('Матрица+', 20, 150, 20)
+            amount_import = amount_col3.number_input('Импорт', 0, 20, 0)
+            st.subheader('Матрица+             Акты')
+            matrix_col, act_col1, act_col2 = st.columns(3)
+            unplaced = matrix_col.text_input('Неразмещенный', placeholder='в строках')
+            act_bel = act_col1.number_input('Белорусские поставщики', 0, 20, 0)
+            act_import = act_col2.number_input('Иппорт;', 0, 20, 0)
+            st.subheader('Штатное расписание')
+            staff_col1, staff_col2, staff_col3, staff_col4 = st.columns(4)
+            ill = staff_col1.number_input('Больничный', 0, 10, 0,)
+            vocation = staff_col2.number_input('Отпуск', 0, 10, 0)
+            absent = staff_col3.number_input('Отсутствуют', 0, 10, 0)
+            overtime = staff_col4.number_input('Переработка', 0, 50, 0, placeholder='в часах')
+            another_col1, another_col2 = st.columns(2)
+            another_safety = another_col1.toggle('Меры безопасности')
+            text_safety = another_col1.text_area('Описание проблемы', disabled=not another_safety)
+            another_incidents = another_col2.toggle('Инциденты')
+            text_incidents = another_col2.text_area('Описание инцидента', disabled=not another_incidents)
+            #print (peak_report.req)
+        with report_col2:
+            income_col1, income_col2 = st.columns(2)
+            income_col1.write('Стандартный')
+            income_col1.line_chart(df_chart[['date','income_standard']], x='date', height=250)
+            income_col2.write('Матрица+')
+            income_col2.line_chart(df_chart[['date','income_matrix']], x='date', height=250)
+
+            fig = go.Figure(data=[
+                go.Bar(name='Стандартный', x= df_chart['date'], y = df_chart['amount_standard']),
+                go.Bar(name='Матрица',  x= df_chart['date'], y = df_chart['amount_matrix']),
+                go.Bar(name='Импорт',  x= df_chart['date'].tail(10), y = df_chart['amount_import'])
+                ])
+            st.write('Приходы:')        
+            st.plotly_chart(fig, use_container_width=True)
+        
+        if not flag_report:
+            message_button = 'Сохранить отчет'
+        else:
+            message_button = 'Исправить отчет'
+        report_save = st.button(message_button)
+        if report_save:
+            peak_report_table = Report_DB_shift(PATH_DB+NAME_DB)
+            try:
+                income_standard = int(income_standard)
+                income_matrix = int(income_matrix)
+            except Exception as e:
+                logger.warning(f'No integer data {e}')
+            staff_amount = Report_DB_staff(PATH_DB+NAME_DB)
+            #TODO define burner
+            list_to_save = (today.strftime('%d.%m.%Y'), income_standard, income_matrix, amount_standard, amount_matrix, amount_import, unplaced, act_bel, act_import, ill, vocation, absent, staff_amount.get_mans_shift(5)-ill-vocation-absent, overtime, text_safety, 'средняя', text_incidents)
+
+            
+            peak_report_table.save_report(list_to_save)           
+            st.success('Отчет сохранен')
+
+        
 def settings():
     pass
 
@@ -179,13 +259,8 @@ def staff():
             df_motivation.columns = ['tab_id', 'bonus']
             df_motivation['tab_id'] = df_motivation['tab_id'].astype(int)
 
-
-        #diagram = df_motivation.merge(diagram, how='tab_id')
-            
-        all_diagram = diagram.merge(df_motivation)
-        #st.table(diagram)
-        all_diagram['bonus_status'] = all_diagram['bonus'].apply(lambda x: procedure.define_bonus(x))
-
+            all_diagram = diagram.merge(df_motivation)
+            all_diagram['bonus_status'] = all_diagram['bonus'].apply(lambda x: procedure.define_bonus(x))
         
         fig_source, fig_target, fig_value, fig_color = procedure.get_list_diagram(diagram)
 
@@ -225,7 +300,7 @@ def staff():
 
         c1_t2, c2_t2 = st.columns(2)
         with c1_t2:
-            st.header("Распределение по стажу работу за месяц")
+            st.header("Распределение стаж/месяц")
             fig_personal.update_layout(
                 
                 font_family="Tahoma",
@@ -235,7 +310,7 @@ def staff():
             st.plotly_chart(fig_personal, use_container_width=True, height = 300, width=300)
 
         with c2_t2:
-            st.header("Распределение сотрудников стаж/мотивацмя")
+            st.header("Распределение стаж/мотивацмя")
             fig_motivation.update_layout(
                 
                 font_family="Tahoma",
@@ -265,11 +340,8 @@ def staff():
 
 def analitics():
     
-    report_shift = Report_DF(repdb, 'report_shift', ['id', 'date_shift', 'of_day', 'shift_id', 'staff_shift', 'add', 'ill', 'vacation', 'absence', 'lines', 'pieces', 'sku', 'effect'])
+    report_shift = Report_DF_report_shift(repdb, 'report_shift', ['id', 'date_shift', 'of_day', 'shift_id', 'staff_shift', 'add', 'ill', 'vacation', 'absence', 'lines', 'pieces', 'sku', 'effect'])
     
-    # shift_man = {1:'Каплич', 2:'Тарасенко', 3:'Юролайть', 4:'Гаврилов', 5:'Липай'}
-
-
     list_for = []
 
     report_shift.prepare_df('date_shift')
