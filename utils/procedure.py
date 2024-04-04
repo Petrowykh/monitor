@@ -96,3 +96,10 @@ def get_list_motivation(df):
             color.append(color_list[dv[0]])
         
     return source, target, value, color
+
+
+def get_burden(on_shift, income):
+    burden = int(income/on_shift)
+    if burden > 3000: return "высокая"
+    elif burden > 1500: return "средняя"
+    else: return "низкая"

@@ -193,7 +193,7 @@ def reports():
                 logger.warning(f'No integer data {e}')
             staff_amount = Report_DB_staff(PATH_DB+NAME_DB)
             #TODO define burner
-            list_to_save = (today.strftime('%d.%m.%Y'), income_standard, income_matrix, amount_standard, amount_matrix, amount_import, unplaced, act_bel, act_import, ill, vocation, absent, staff_amount.get_mans_shift(5)-ill-vocation-absent, overtime, text_safety, 'средняя', text_incidents)
+            list_to_save = (today.strftime('%d.%m.%Y'), income_standard, income_matrix, amount_standard, amount_matrix, amount_import, unplaced, act_bel, act_import, ill, vocation, absent, staff_amount.get_mans_shift(5)-ill-vocation-absent, overtime, text_safety, procedure.get_burden(staff_amount.get_mans_shift(5)-ill-vocation-absent, income_standard+income_matrix*10), text_incidents)
 
             
             peak_report_table.save_report(list_to_save)           
@@ -382,8 +382,6 @@ def analitics():
                                               aggfunc={'lines' : "sum", 'effect' : "mean"}).reset_index()
 
     x_ = procedure.period_to_2list(years_period, month_period, chart_data)
-
-    print(x_)
 
     col1, col2 = st.columns(2)
     with col1:
