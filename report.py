@@ -7,7 +7,7 @@ import plotly.express as px
 
 from datetime import datetime, date
 
-import logging
+import logging, os
 import numpy as np
 
 import config_ini
@@ -18,6 +18,7 @@ path = "config.ini"
 
 PATH_DB = config_ini.get_setting(path, 'db', 'path_db')
 NAME_DB = config_ini.get_setting(path, 'db', 'name_db')
+FILE_MOTIVATION = config_ini.get_setting(path, 'file', 'file_motivation')
 
 logger = logging.getLogger(__name__)
 #logger = logging.basicConfig(filename='report_log.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
@@ -230,6 +231,7 @@ def staff():
     list_for = ['01', '02', '03']
 
     with st.sidebar:
+        st.sidebar.image('img\logo_red.png')
         all_house = st.toggle("Весь персонал", value=True)
         choose_man_num = staff_man_dict[st.selectbox('Выберите смену', staff_man, disabled=all_house)]
         #start_date, end_date = st.select_slider('Выберите период', options=['январь', 'февраль', 'март'], value='март')
@@ -260,15 +262,17 @@ def staff():
         diagram['end_status'] = diagram['end_delta'].apply(lambda x: procedure.define_status(x))
         diagram.loc[diagram['active'] == 0, 'end_status'] = 4 # уволенные
         
-        motivation = st.sidebar.file_uploader('Файл с мотивацией')
-        if motivation is not None:
+        if not os.path.isfile(FILE_MOTIVATION):
+            motivation = st.sidebar.file_uploader('Файл с мотивацией')
             df_motivation = pd.read_excel(motivation)
-            df_motivation = df_motivation.loc[:, ['kpi_userid', '% Премии']]
-            df_motivation.columns = ['tab_id', 'bonus']
-            df_motivation['tab_id'] = df_motivation['tab_id'].astype(int)
-
-            all_diagram = diagram.merge(df_motivation)
-            all_diagram['bonus_status'] = all_diagram['bonus'].apply(lambda x: procedure.define_bonus(x))
+        else:
+            df_motivation = pd.read_excel(FILE_MOTIVATION)
+        
+        df_motivation = df_motivation.loc[:, ['kpi_userid', '% Премии']]
+        df_motivation.columns = ['tab_id', 'bonus']
+        df_motivation['tab_id'] = df_motivation['tab_id'].astype(int)
+        all_diagram = diagram.merge(df_motivation)
+        all_diagram['bonus_status'] = all_diagram['bonus'].apply(lambda x: procedure.define_bonus(x))
         
         fig_source, fig_target, fig_value, fig_color = procedure.get_list_diagram(diagram)
 
@@ -327,6 +331,18 @@ def staff():
                 )
             st.plotly_chart(fig_motivation, use_container_width=True, height = 300, width=300)
         
+        st.subheader('Распределение')
+        x_mot = ['менее 3', '3-6 мес', '6-12 мес', 'более 1 года']
+        
+        fig_mot = go.Figure(data=[
+            go.Bar(name='Каплич', x = x_mot, y = all_diagram[all_diagram['shift'] == 1].groupby(['end_status'])['end_status'].count().to_list()[:4]),
+            go.Bar(name='Тарасенко', x = x_mot, y = all_diagram[all_diagram['shift'] == 2].groupby(['end_status'])['end_status'].count().to_list()[:4]),
+            go.Bar(name='Юролайть', x = x_mot, y = all_diagram[all_diagram['shift'] == 3].groupby(['end_status'])['end_status'].count().to_list()[:4]),
+            go.Bar(name='Гаврилов', x = x_mot, y = all_diagram[all_diagram['shift'] == 4].groupby(['end_status'])['end_status'].count().to_list()[:4]),
+            ])
+        # Change the bar mode
+        #fig_mot.update_layout(barmode='group')
+        st.plotly_chart(fig_mot, use_container_width=400)
 
     with staff_tab2:
         urv_file = st.file_uploader('Загрузите файл')
@@ -358,7 +374,7 @@ def analitics():
 
 
     with st.sidebar:
-       
+        st.sidebar.image('img\logo_red.png')
         years_period = st.multiselect(
             'Года:', 
             sorted(report_shift.df['year_p'].unique()),
@@ -415,9 +431,11 @@ def analitics():
             go.Bar(name='Тарасенко', x=x_,y=chart_data['effect'][(chart_data['shift_id'] == 2) & (chart_data['of_day'] == day_flag) & (chart_data['year_p'].isin(years_period)) & (chart_data['month_p'].isin(month_period))]),
             go.Bar(name='Юролайть', x=x_, y=chart_data['effect'][(chart_data['shift_id'] == 3) & (chart_data['of_day'] == day_flag) & (chart_data['year_p'].isin(years_period)) & (chart_data['month_p'].isin(month_period))]),
             go.Bar(name='Гаврилов', x=x_, y=chart_data['effect'][(chart_data['shift_id'] == 4) & (chart_data['of_day'] == day_flag) & (chart_data['year_p'].isin(years_period)) & (chart_data['month_p'].isin(month_period))]),
+            #go.addLine(y = 300)   #.Line(x=x_, y=[300, 300, 300, 300])
         ])
         # Change the bar mode
-        fig.update_layout(barmode='group')
+        #fig.add_hline(y=301, line_dash="dot", row=3, col="all")
+        fig.add_hrect(y0=0, y1=300 if day_flag else 150, line_width=0, fillcolor="yellow", opacity=0.3)
         st.plotly_chart(fig, use_container_width=400)
 
 menu_dict = {
