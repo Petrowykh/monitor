@@ -103,3 +103,7 @@ def get_burden(on_shift, income):
     if burden > 3000: return "высокая"
     elif burden > 1500: return "средняя"
     else: return "низкая"
+
+
+def list_to_string(list):
+    return ' '.join(map(str, list))

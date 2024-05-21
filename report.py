@@ -14,6 +14,11 @@ import config_ini
 from utils import procedure
 from report_db import *
 
+import win32ui, win32print
+from PIL import Image, ImageWin
+
+import qrcode
+
 path = "config.ini"
 
 PATH_DB = config_ini.get_setting(path, 'db', 'path_db')
@@ -37,14 +42,19 @@ def main():
                    layout="wide")
 
 
-    col_header1, col_header2 = st.columns(2)
+    col_header1, col_header2 = st.columns([9, 1])
     with col_header1:
         st.image('img\logo.png')
         st.subheader(datetime.now().strftime("%d/%m/%Y %H:%M"))
     with col_header2:
-        st.image ('img\\1note.jpg', width=700)
+        st.image ('img\logo_red.png')
 
-    main_menu = option_menu(None, ["Информация", "Штат", "Мониторинг", "Отчет", "Анализ", 'Настройки'], 
+    main_menu = option_menu(None, ["Информация", 
+                                   "Штат", 
+                                   #"Мониторинг", 
+                                   "Отчет", 
+                                   "Анализ", 
+                                   'Настройки'], 
         icons=['info-square-fill', 'list-stars', 'tv-fill' , "list-columns-reverse", 'clipboard2-data-fill', 'gear-fill'], 
         menu_icon="cast", default_index=0, orientation="horizontal")
     
@@ -213,6 +223,7 @@ def settings():
     pass
 
 def staff():
+    flag_out = False
     staff = Report_DF(repdb, 'staff', ['id', 'tab_id', 'name', 'job', 'shift', 'date_in', 'active', 'dismiss'])
     staff_man = staff.df['name'][staff.df['job'] == 7].values.tolist()
     staff_man_dict = {}
@@ -228,10 +239,10 @@ def staff():
 
     #print(staff.df['delta'].dt.days)
 
-    list_for = ['01', '02', '03']
+    list_for = ['01', '02', '03', '04', '05']
 
     with st.sidebar:
-        st.sidebar.image('img\logo_red.png')
+        
         all_house = st.toggle("Весь персонал", value=True)
         choose_man_num = staff_man_dict[st.selectbox('Выберите смену', staff_man, disabled=all_house)]
         #start_date, end_date = st.select_slider('Выберите период', options=['январь', 'февраль', 'март'], value='март')
@@ -239,12 +250,12 @@ def staff():
             'Месяцы',
             sorted(list_for),
         )
-    staff_tab1, staff_tab2 = st.tabs(['Персонал', 'УРВ'])
+    staff_tab1, staff_tab2, staff_tab3 = st.tabs(['Персонал', 'УРВ', 'Выход'])
    
     with staff_tab1:
         
         start_date = datetime.strptime(f'2024-{month_period}-01', '%Y-%m-%d')
-        end_date = datetime.strptime(f'2024-{month_period}-31', '%Y-%m-%d')
+        end_date = datetime.strptime(f'2024-{month_period}-30', '%Y-%m-%d')
         
         diagram = staff.df[['tab_id', 'job', 'shift', 'date_in', 'active', 'dismiss']]
         if not(all_house):
@@ -348,18 +359,78 @@ def staff():
         urv_file = st.file_uploader('Загрузите файл')
         if urv_file is not None:
             df_urv = pd.read_excel(urv_file)
+            
             df_urv.columns = ['name', 'shift', 'report_date', 'start_time', 'end_time', 'all', 'delta']
             df_urv = df_urv.dropna(subset=['report_date'])
             #st.table(df_urv)
             df_urv['delta_f'] = df_urv['delta'].astype('string')
+            
             df_urv['delta_d'] = df_urv['delta_f'].apply(lambda x: procedure.change_time(x)).round(2)
 
             func = {'delta_d':['sum', 'count']}
             df_report = df_urv.groupby(['name']).agg(func).reset_index()
             df_report.columns = ['name', 'all_time', 'work_shift']
             df_report['time_mean'] = (df_report['all_time']/df_report['work_shift']).round(1)
+            #st.table(staff.df)
             df_report = staff.df.merge(df_report)
             st.table(df_report[df_report['shift'] == choose_man_num])
+
+    with staff_tab3:
+        
+        c1_t3, c2_t3 = st.columns(2)
+
+        with c1_t3:
+            structure_out = st.selectbox('Подразделение', ['ЦС', 'СКК', 'УХВБ'])
+            name_out = st.multiselect('ФИО', staff.df['name'].sort_values())
+            reason_out = st.selectbox('Причина', ['Обед', 'личное', 'Прадиус','доп работы'])
+            if st.button('Сгенерировать', disabled=flag_out):
+                flag_out = True
+                st.text(flag_out)
+                str_out = str(datetime.now()) + '\n' + structure_out + '\n' + procedure.list_to_string(name_out) + '\n' + reason_out
+                qr = qrcode.QRCode(
+                    version=1,
+                    error_correction=qrcode.constants.ERROR_CORRECT_L,
+                    box_size=10,
+                    border=4,
+                )
+
+                qr.add_data(str_out)
+                qr.make(fit=True)
+
+                img = qr.make_image(fill_color="black", back_color="white")
+                img.save("ni.png")
+                
+
+        with c2_t3:
+            if flag_out:
+                st.image('ni.png', width=250)
+            if st.button('Распечатать', disabled = not flag_out):
+                filename = "ni.png"
+                #print(win32print.EnumPrinters(3, '\\\\10.110.10.68'))
+                printer_name = 'DUB-NACHSM-426'
+                printer_name = win32print.GetDefaultPrinterW()
+                #pprinter = (None, 'DUB-NACHSM-426', '', '10.110.10.68', 'HP LaserJet MFP M426fdn', '', '', None, '', 'winprint', 'RAW', '', None, 2624, 1, 0, 0, 0, 0, 0, 0)
+                # d = win32print.GetPrinter(win32print.OpenPrinter(printer_name))
+                # print(d)
+                #win32print.SetPrinter(win32print.AddPrinter(printer_name, 2, win32print.OpenPrinter(printer_name)))
+                print('----------------------------------------------------------------')
+                
+                print(printer_name, filename)
+                hDC = win32ui.CreateDC ()
+                hDC.CreatePrinterDC (printer_name)
+    
+                bmp = Image.open (filename)
+                if bmp.size[0] < bmp.size[1]:
+                    bmp = bmp.rotate (90)
+                hDC.StartDoc (filename)
+                hDC.StartPage ()
+                dib = ImageWin.Dib (bmp)
+                dib.draw (hDC.GetHandleOutput (), (0, 0, 1000, 1000))    
+                hDC.EndPage ()
+                hDC.EndDoc ()
+                hDC.DeleteDC ()
+                os.remove('ni.png')
+                flag_out = False
 
 
 def analitics():
@@ -374,7 +445,7 @@ def analitics():
 
 
     with st.sidebar:
-        st.sidebar.image('img\logo_red.png')
+        
         years_period = st.multiselect(
             'Года:', 
             sorted(report_shift.df['year_p'].unique()),
