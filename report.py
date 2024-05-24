@@ -17,6 +17,8 @@ from report_db import *
 import win32ui, win32print
 from PIL import Image, ImageWin
 
+from logging import error
+
 import qrcode
 
 path = "config.ini"
@@ -45,7 +47,7 @@ def main():
     col_header1, col_header2 = st.columns([9, 1])
     with col_header1:
         st.image('img\logo.png')
-        st.subheader(datetime.now().strftime("%d/%m/%Y %H:%M"))
+        st.subheader(datetime.datetime.now().strftime("%d/%m/%Y %H:%M"))
     with col_header2:
         st.image ('img\logo_red.png')
 
@@ -53,16 +55,37 @@ def main():
                                    "Штат", 
                                    #"Мониторинг", 
                                    "Отчет", 
-                                   "Анализ", 
+                                   "Аналитика", 
                                    'Настройки'], 
-        icons=['info-square-fill', 'list-stars', 'tv-fill' , "list-columns-reverse", 'clipboard2-data-fill', 'gear-fill'], 
+        icons=['info-square-fill', 
+               'list-stars', 
+               #'tv-fill' , 
+               "list-columns-reverse", 
+               'clipboard2-data-fill', 
+               'gear-fill'], 
         menu_icon="cast", default_index=0, orientation="horizontal")
     
     if main_menu in menu_dict.keys():   
         menu_dict[main_menu]()
 
 def info():
-    pass
+    tasks = Report_DB_tasks(PATH_DB+NAME_DB)
+    st.subheader('Задачи')
+    #st.table(tasks.get_active_tasks())
+    col_i1, col_i2, col_i3, col_det = st.columns([1, 5, 1, 4])
+    for count, i in enumerate(tasks.get_active_tasks()):
+        with col_i1:
+            st.write(f'{count+1}')
+        with col_i2:
+            st.write(f'{i[0]}')
+        with col_i3:
+            st.write(f'{i[1]} %')
+    if st.button('Добавить..'):
+        with st.popover('Задачи', ):
+            ds_cars = st.text_input('Описание задачи', key=118)
+    
+        
+
 
 def monitor():
     
@@ -130,12 +153,189 @@ def monitor():
 
 def reports():
     
-    standard_shift, peak_shift = st.tabs(['Стандартная смена', 'Пиковая смена'])
+    
+    cb = [None]*30
+
+    day_shift, night_shift, peak_shift, check_list = st.tabs(['Дневная смена', 'Ночная смена', 'Пиковая смена', 'Чек-лист уборки'])
     today = date.today()
 
     check_data = False
-    with standard_shift:
-        st.header(f'Отчет стандартной смены за: {today}', divider='red')
+    with day_shift:
+        st.subheader(f'Отчет дневной смены за: {today}', divider='red')
+        c_staff = st.container(border=True)
+        with c_staff:
+            st.text('Штат смены: 23 чел')
+            col1_ds, col2_ds, col3_ds, col4_ds = st.columns(4)
+            with col1_ds:
+                ds_ill = st.number_input('Больничный', min_value=0, max_value=20, step=1, placeholder='кол-во', key=101)
+            with col2_ds:
+                ds_vocation= st.number_input('Отпуск', min_value=0, max_value=20, step=1, placeholder='кол-во', key=102)
+            with col3_ds:
+                ds_abscent = st.number_input('Отсутвтует', min_value=0, max_value=20, step=1, placeholder='кол-во', key=103)
+            with col4_ds:
+                ds_overtime = st.text_input('Переработка', value="0", placeholder='в часах', key=104)
+        
+        c1_ds, c2_ds, c3_ds = st.columns([3, 1, 1])
+        with c1_ds:
+            c_goods1 = st.container(border=True)
+            with c_goods1:
+                col1_ds, col2_ds, col3_ds = st.columns(3)
+            
+                with col1_ds:
+                    st.text('Грузооборот исходящий')
+                    ds_out_lines = st.text_input('Строки исх', key=105)
+                    ds_out_tings = st.text_input('Штуки исх', key=106)
+                with col2_ds:
+                    st.text('Грузооборот входящий')
+                    ds_in_lines = st.text_input('Строки вх', key=107)
+                    ds_in_tings = st.text_input('Штуки вх', key=108)
+                with col3_ds:
+                    st.text('Отобрано')
+                    ds_selected_lines = st.text_input('Строки отборан', key=109)
+                    ds_selected_tings = st.text_input('Штуки отобран', key=110)
+        with c2_ds:
+            c_goods2 = st.container(border=True)
+            with c_goods2:
+                st.text('Анализ свободного места')
+                ds_zone_save = st.text_input('Зона хранения', key=111)
+                ds_zone_out = st.text_input('Зона отбора', key=112)    
+        with c3_ds:
+            c_goods3 = st.container(border=True)    
+            with c_goods3:
+                st.text('Неотгруженный товар по вине')
+                ds_unloaded_warehouse = st.number_input('Склад', key=113)
+                ds_unloaded_logistic = st.number_input('Логистика', key=114) 
+        
+        c1_ds, c2_ds = st.columns(2)
+        with c1_ds:
+            c_internet = st.container(border=True)    
+            with c_internet:
+                st.text('Интернет магазин')
+                col1_ds, col2_ds, col3_ds = st.columns(3)
+                with col1_ds:
+                    ds_internet_cars = st.number_input('Количетсво машин', min_value=1, key=115)
+                with col2_ds:
+                    ds_interent_thigs = st.text_input('Количетсво штук', key=1162)
+                with col3_ds:
+                    ds_ok = st.toggle('Загружены вовремя', value=True, key=117)
+                    if not ds_ok:
+                        with st.popover('Кол-во', ):
+                            ds_cars = st.number_input('Введите количетсво машин', min_value=1, step=1, key=118)
+        with c2_ds:
+            c_selected = st.container(border=True)
+            with c_selected:
+                st.text('Скомпановано')
+                col1_ds, col2_ds, col3_ds = st.columns(3)
+                with col1_ds:
+                    ds_sta = st.number_input('СТА', key=119)
+                with col2_ds:
+                    ds_kta = st.number_input('КТА', key=120)
+                with col3_ds:
+                    ds_sitrak = st.number_input('sitrak', key=121)
+        
+        c_tasks = st.container(border=True)
+        with c_tasks:
+            st.text('Количетсво заданий на размещение')
+            col1_ds, col2_ds, col3_ds, col4_ds, col5_ds = st.columns(5)
+            with col1_ds:
+                ds_tasks_begin = st.number_input('Начало смены', key=122)
+            with col2_ds:
+                ds_tasks_ngb = st.number_input('НГБ', key=123)
+            with col3_ds:
+                ds_tasks_epal = st.number_input('E-PAL', key=124)
+            with col4_ds:
+                ds_tasks_created = st.number_input('созданных', key=125)
+            with col5_ds:
+                ds_tasks_executed = st.number_input('выполненых', key=126)
+
+
+    with night_shift:
+        st.subheader(f'Отчет ночной смены за: {today}', divider='red')
+        c_staff = st.container(border=True)
+        with c_staff:
+            st.text('Штат смены: 23 чел')
+            col1_ds, col2_ds, col3_ds, col4_ds = st.columns(4)
+            with col1_ds:
+                ns_ill = st.number_input('Больничный', min_value=0, max_value=20, step=1, placeholder='кол-во')
+            with col2_ds:
+                ns_vocation= st.number_input('Отпуск', min_value=0, max_value=20, step=1, placeholder='кол-во')
+            with col3_ds:
+                ns_abscent = st.number_input('Отсутвтует', min_value=0, max_value=20, step=1, placeholder='кол-во')
+            with col4_ds:
+                ns_overtime = st.text_input('Переработка', value="0", placeholder='в часах')
+        
+        c1_ds, c2_ds, c3_ds = st.columns([3, 1, 1])
+        with c1_ds:
+            c_goods1 = st.container(border=True)
+            with c_goods1:
+                col1_ds, col2_ds, col3_ds = st.columns(3)
+            
+                with col1_ds:
+                    st.text('Грузооборот исходящий')
+                    ns_out_lines = st.text_input('Строки исх')
+                    ns_out_tings = st.text_input('Штуки исх')
+                with col2_ds:
+                    st.text('Грузооборот входящий')
+                    ns_in_lines = st.text_input('Строки вх')
+                    ns_in_tings = st.text_input('Штуки вх')
+                with col3_ds:
+                    st.text('Отобрано')
+                    ns_selected_lines = st.text_input('Строки отборан')
+                    ns_selected_tings = st.text_input('Штуки отобран')
+        with c2_ds:
+            c_goods2 = st.container(border=True)
+            with c_goods2:
+                st.text('Анализ свободного места')
+                ns_zone_save = st.text_input('Зона хранения')
+                ns_zone_out = st.text_input('Зона отбора')    
+        with c3_ds:
+            c_goods3 = st.container(border=True)    
+            with c_goods3:
+                st.text('Неотгруженный товар по вине')
+                ns_unloaded_warehouse = st.number_input('Склад')
+                ns_unloaded_logistic = st.number_input('Логистика') 
+        
+        c1_ds, c2_ds = st.columns([3, 2])
+        with c1_ds:
+            c_internet = st.container(border=True)    
+            with c_internet:
+                st.text('Интернет магазин')
+                col1_ds, col2_ds, col3_ds = st.columns(3)
+                with col1_ds:
+                    ns_internet_cars = st.number_input('Количетсво машин')
+                with col2_ds:
+                    ns_interent_thigs = st.number_input('Количетсво штук')
+                with col3_ds:
+                    ns_ok = st.toggle('Загружены вовремя', value=True)
+                    if not ds_ok:
+                        with st.popover('Кол-во', ):
+                            
+                            ns_cars = st.number_input('Введите количетсво машин', min_value=1, step=1)
+        with c2_ds:
+            c_selected = st.container(border=True)
+            with c_selected:
+                st.text('Скомпановано')
+                col1_ds, col2_ds = st.columns(2)
+                with col1_ds:
+                    ns_sta = st.number_input('СТА')
+                with col2_ds:
+                    ns_kta = st.number_input('КТА')
+        
+        c_tasks = st.container(border=True)
+        with c_tasks:
+            st.text('Количетсво заданий на размещение')
+            col1_ds, col2_ds, col3_ds, col4_ds, col5_ds = st.columns(5)
+            with col1_ds:
+                ns_tasks_begin = st.number_input('Начало смены')
+            with col2_ds:
+                ns_tasks_ngb = st.number_input('НГБ')
+            with col3_ds:
+                ns_tasks_epal = st.number_input('E-PAL')
+            with col4_ds:
+                ns_tasks_created = st.number_input('созданных')
+            with col5_ds:
+                ns_tasks_executed = st.number_input('выполненых')
+       
 
     with peak_shift:
         peak_report = Report_DF_peak_shift(repdb, 'peak_shift', ['date', 'income_standard', 'income_matrix', 'amount_standard', 'amount_matrix', 'amount_import', 'unplaced', 'act_bel', 'act_import', 'ill', 'vocation', 'absent', 'on_shift', 'overtime', 'safety', 'burden', 'incidents'])
@@ -218,6 +418,59 @@ def reports():
             peak_report_table.save_report(list_to_save, flag_report)         
             st.success('Отчет сохранен')
 
+
+    with check_list:
+        check_listDB = Report_DB_check_list(PATH_DB+NAME_DB)
+        flag_checklist = True if datetime.datetime.now().strftime("%d/%m/%Y") == check_listDB.get_last_date() else False
+        print(flag_checklist)
+        if flag_checklist:
+            st.success('отчет создан')
+        col_check_list, col_viz = st.columns([3,1])
+        with col_check_list:
+            with open('utils/check_list.json', encoding="utf-8") as f:
+                check_list = json.load(f)
+                   
+            for key in check_list.keys():
+                st.subheader(key)
+                for item in check_list[key].items():
+                    count = int(item[0])
+                    cb[count] = st.checkbox(item[1], key=int(item[0]), value=True, disabled=flag_checklist)
+                
+            if st.button('Сохранить',disabled=flag_checklist):
+                count = 0
+                for i in cb:
+                    if i:
+                        count = count + 1
+                cb[0] = int(count/26*100)
+                                
+                check_listDB.save_report(datetime.datetime.now().strftime("%d/%m/%Y"),
+                                            [cb[1], cb[2], cb[3], cb[4], cb[5]],
+                                            [cb[6], cb[7], cb[8], cb[9], cb[10], cb[11]],
+                                            [cb[12], cb[13], cb[14], cb[15], cb[16]],
+                                            [cb[17], cb[18]],
+                                            [cb[19], cb[20]],
+                                            [cb[21], cb[22], cb[23], cb[24], cb[25], cb[26]])    
+                letter_begin = '<table style="font-family:Arial" border = 1><tbody>'
+                letter_body = ''
+                count = 0
+                for key in check_list.keys():
+                    letter_body = letter_body + f'<tr><td colspan="2"><B>{key}</B></td></tr>'
+                    for item in check_list[key].items():
+                        
+                        count = count + 1
+                        letter_body = letter_body + f'<tr><td>{item[1]}</td>'
+                        symbol = "\u2705" if cb[count] else " "
+                        letter_body = letter_body + f'<td style="width:50px">{symbol}</td></tr>'
+                    
+				
+                letter_body = letter_begin + letter_body + f'<tr><td colspan="2"><B>Процент выполнения {cb[0]}%</B></td></tr>' + '</tbody></table>'
+                procedure.send_letter('Отчет по уборке', letter_body, [
+                    'andrej.petrovyh@patio-minsk.by', 
+                    'vladimir.rabchenya@patio-minsk.by'
+                    ])
+                st.success('Отчет сохранен и отправлен')
+           
+
         
 def settings():
     pass
@@ -234,8 +487,8 @@ def staff():
     
     staff.df = staff.df[(staff.df['shift'] < 6) & (staff.df['job'] != 7) & (staff.df['job'] != 13)]
 
-    staff.df['date_in'] = pd.to_datetime(staff.df['date_in'])
-    staff.df['dismiss'] = pd.to_datetime(staff.df['dismiss'])
+    staff.df['date_in'] = pd.to_datetime(staff.df['date_in'], dayfirst=True)
+    staff.df['dismiss'] = pd.to_datetime(staff.df['dismiss'], dayfirst=True)
 
     #print(staff.df['delta'].dt.days)
 
@@ -254,8 +507,8 @@ def staff():
    
     with staff_tab1:
         
-        start_date = datetime.strptime(f'2024-{month_period}-01', '%Y-%m-%d')
-        end_date = datetime.strptime(f'2024-{month_period}-30', '%Y-%m-%d')
+        start_date = datetime.datetime.strptime(f'2024-{month_period}-01', '%Y-%m-%d')
+        end_date = datetime.datetime.strptime(f'2024-{month_period}-30', '%Y-%m-%d')
         
         diagram = staff.df[['tab_id', 'job', 'shift', 'date_in', 'active', 'dismiss']]
         if not(all_house):
@@ -386,7 +639,7 @@ def staff():
             if st.button('Сгенерировать', disabled=flag_out):
                 flag_out = True
                 st.text(flag_out)
-                str_out = str(datetime.now()) + '\n' + structure_out + '\n' + procedure.list_to_string(name_out) + '\n' + reason_out
+                str_out = str(datetime.datetime.now()) + '\n' + structure_out + '\n' + procedure.list_to_string(name_out) + '\n' + reason_out
                 qr = qrcode.QRCode(
                     version=1,
                     error_correction=qrcode.constants.ERROR_CORRECT_L,
@@ -514,7 +767,7 @@ menu_dict = {
     "Штат" : staff,
     "Мониторинг" : monitor,
     "Отчет" : reports,
-    "Анализ": analitics,
+    "Аналитика": analitics,
     "Настройки": settings,
 }
 

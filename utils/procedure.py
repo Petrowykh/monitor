@@ -1,3 +1,42 @@
+
+from email.mime.text import MIMEText
+from email.header import Header
+import config_ini, smtplib
+
+path = "config.ini"
+
+MAIL_SERVER = config_ini.get_setting(path, 'mailserver', 'mail_server')
+MAIL_PORT = config_ini.get_setting(path, 'mailserver', 'mail_port')
+MAIL_USERNAME = config_ini.get_setting(path, 'mailserver', 'mail_username')
+MAIL_PASSWORD = config_ini.get_setting(path, 'mailserver', 'mail_password')
+
+
+
+def send_letter(subject, htmlBody, recipient='andrej.petrovyh@patio-minsk.by'):
+    sender = MAIL_USERNAME
+    receivers = recipient  
+    mail_msg = htmlBody
+    message = MIMEText(mail_msg, 'html', 'utf-8')
+    message['From'] = Header("\u2139 Информационная рассылка", 'utf-8')
+        
+    message['Subject'] = Header(subject, 'utf-8')
+    
+    try:
+        smtpObj = smtplib.SMTP(MAIL_SERVER, MAIL_PORT)
+    except Exception as e:
+        smtpObj = smtplib.SMTP_SSL('sp-mail1.patio-minsk.by', 465)
+
+    smtpObj.ehlo()
+    smtpObj.starttls()
+    smtpObj.login(MAIL_USERNAME, MAIL_PASSWORD)
+    
+    try:
+        smtpObj.sendmail(sender, receivers, message.as_string())
+        
+    except smtplib.SMTPException as e:
+        return e
+    smtpObj.quit()
+
 def period_to_2list(yp, mp: list, df_data) -> list:
     lfh = {}
     lfh_y = []
