@@ -80,11 +80,15 @@ def info():
             st.write(f'{i[0]}')
         with col_i3:
             st.write(f'{i[1]} %')
-    if st.button('Добавить..'):
-        with st.popover('Задачи', ):
-            ds_cars = st.text_input('Описание задачи', key=118)
-    
+    name = ''        
+    form_task = st.form(key='my-form')
+    description = form_task.text_input(label='Введите описание задачи', value='')
+    sub = form_task.form_submit_button(label='Добавить')
+    if sub:
+        tasks.add_tasks(description)
+        st.success('Задача добавлена')
         
+        st.rerun()
 
 
 def monitor():
@@ -203,8 +207,8 @@ def reports():
             c_goods3 = st.container(border=True)    
             with c_goods3:
                 st.text('Неотгруженный товар по вине')
-                ds_unloaded_warehouse = st.number_input('Склад', key=113)
-                ds_unloaded_logistic = st.number_input('Логистика', key=114) 
+                ds_unloaded_warehouse = st.number_input('Склад', min_value=0, step=1, key=113)
+                ds_unloaded_logistic = st.number_input('Логистика', min_value=0, step=1, key=114) 
         
         c1_ds, c2_ds = st.columns(2)
         with c1_ds:
@@ -215,7 +219,7 @@ def reports():
                 with col1_ds:
                     ds_internet_cars = st.number_input('Количетсво машин', min_value=1, key=115)
                 with col2_ds:
-                    ds_interent_thigs = st.text_input('Количетсво штук', key=1162)
+                    ds_interent_thigs = st.text_input('Количетсво штук', key=116)
                 with col3_ds:
                     ds_ok = st.toggle('Загружены вовремя', value=True, key=117)
                     if not ds_ok:
@@ -227,27 +231,47 @@ def reports():
                 st.text('Скомпановано')
                 col1_ds, col2_ds, col3_ds = st.columns(3)
                 with col1_ds:
-                    ds_sta = st.number_input('СТА', key=119)
+                    ds_sta = st.number_input('СТА', min_value=0, step=1, key=119)
                 with col2_ds:
-                    ds_kta = st.number_input('КТА', key=120)
+                    ds_kta = st.number_input('КТА', min_value=0, step=1, key=120)
                 with col3_ds:
-                    ds_sitrak = st.number_input('sitrak', key=121)
+                    ds_sitrak = st.number_input('sitrak', min_value=0, step=1, key=121)
         
-        c_tasks = st.container(border=True)
-        with c_tasks:
+        c_place = st.container(border=True)
+        with c_place:
             st.text('Количетсво заданий на размещение')
             col1_ds, col2_ds, col3_ds, col4_ds, col5_ds = st.columns(5)
             with col1_ds:
-                ds_tasks_begin = st.number_input('Начало смены', key=122)
+                ds_place_begin = st.number_input('Начало смены', min_value=0, step=1, key=122)
             with col2_ds:
-                ds_tasks_ngb = st.number_input('НГБ', key=123)
+                ds_place_ngb = st.number_input('НГБ', min_value=0, step=1, key=123)
             with col3_ds:
-                ds_tasks_epal = st.number_input('E-PAL', key=124)
+                ds_place_epal = st.number_input('E-PAL', min_value=0, step=1, key=124)
             with col4_ds:
-                ds_tasks_created = st.number_input('созданных', key=125)
+                ds_place_created = st.number_input('созданных', min_value=0, step=1, key=125)
             with col5_ds:
-                ds_tasks_executed = st.number_input('выполненых', key=126)
+                ds_place_executed = st.number_input('выполненых', min_value=0, step=1, key=126)
 
+        col_t1, col_t2 = st.columns([1, 2])
+        with col_t1:
+            c_tasks = st.container(border=True)
+            with c_tasks:
+                count = 0 
+                percent = [None]*30
+                tasks = Report_DB_tasks(PATH_DB+NAME_DB)
+                for count, i in enumerate(tasks.get_active_tasks()):
+                    percent[count] = st.slider(str(count+1) + '. ' + i[0], 0, 100, int(i[1]), step=10, key=150+count)
+        
+        with col_t2:        
+            c_another = st.container(border=True)
+            with c_another:
+                another_col1, another_col2 = st.columns(2)
+                another_safety = another_col1.toggle('Меры безопасности', key=127)
+                text_safety = another_col1.text_area('Описание проблемы', disabled=not another_safety, key=128)
+                another_incidents = another_col2.toggle('Инциденты', key=129)
+                text_incidents = another_col2.text_area('Описание инцидента', disabled=not another_incidents, key=130)
+
+        
 
     with night_shift:
         st.subheader(f'Отчет ночной смены за: {today}', divider='red')
@@ -256,13 +280,13 @@ def reports():
             st.text('Штат смены: 23 чел')
             col1_ds, col2_ds, col3_ds, col4_ds = st.columns(4)
             with col1_ds:
-                ns_ill = st.number_input('Больничный', min_value=0, max_value=20, step=1, placeholder='кол-во')
+                ns_ill = st.number_input('Больничный', min_value=0, max_value=20, step=1, placeholder='кол-во', key=201)
             with col2_ds:
-                ns_vocation= st.number_input('Отпуск', min_value=0, max_value=20, step=1, placeholder='кол-во')
+                ns_vocation= st.number_input('Отпуск', min_value=0, max_value=20, step=1, placeholder='кол-во', key=202)
             with col3_ds:
-                ns_abscent = st.number_input('Отсутвтует', min_value=0, max_value=20, step=1, placeholder='кол-во')
+                ns_abscent = st.number_input('Отсутвтует', min_value=0, max_value=20, step=1, placeholder='кол-во', key=203)
             with col4_ds:
-                ns_overtime = st.text_input('Переработка', value="0", placeholder='в часах')
+                ns_overtime = st.text_input('Переработка', value="0", placeholder='в часах', key=204)
         
         c1_ds, c2_ds, c3_ds = st.columns([3, 1, 1])
         with c1_ds:
@@ -272,28 +296,28 @@ def reports():
             
                 with col1_ds:
                     st.text('Грузооборот исходящий')
-                    ns_out_lines = st.text_input('Строки исх')
-                    ns_out_tings = st.text_input('Штуки исх')
+                    ns_out_lines = st.text_input('Строки исх', key=205)
+                    ns_out_tings = st.text_input('Штуки исх', key=206)
                 with col2_ds:
                     st.text('Грузооборот входящий')
-                    ns_in_lines = st.text_input('Строки вх')
-                    ns_in_tings = st.text_input('Штуки вх')
+                    ns_in_lines = st.text_input('Строки вх', key=207)
+                    ns_in_tings = st.text_input('Штуки вх', key=208)
                 with col3_ds:
                     st.text('Отобрано')
-                    ns_selected_lines = st.text_input('Строки отборан')
-                    ns_selected_tings = st.text_input('Штуки отобран')
+                    ns_selected_lines = st.text_input('Строки отборан', key=209)
+                    ns_selected_tings = st.text_input('Штуки отобран', key=210)
         with c2_ds:
             c_goods2 = st.container(border=True)
             with c_goods2:
                 st.text('Анализ свободного места')
-                ns_zone_save = st.text_input('Зона хранения')
-                ns_zone_out = st.text_input('Зона отбора')    
+                ns_zone_save = st.text_input('Зона хранения', key=211)
+                ns_zone_out = st.text_input('Зона отбора', key=212)    
         with c3_ds:
             c_goods3 = st.container(border=True)    
             with c_goods3:
                 st.text('Неотгруженный товар по вине')
-                ns_unloaded_warehouse = st.number_input('Склад')
-                ns_unloaded_logistic = st.number_input('Логистика') 
+                ns_unloaded_warehouse = st.number_input('Склад', min_value=0, step=1, key=213)
+                ns_unloaded_logistic = st.number_input('Логистика', min_value=0, step=1, key=214) 
         
         c1_ds, c2_ds = st.columns([3, 2])
         with c1_ds:
@@ -302,96 +326,127 @@ def reports():
                 st.text('Интернет магазин')
                 col1_ds, col2_ds, col3_ds = st.columns(3)
                 with col1_ds:
-                    ns_internet_cars = st.number_input('Количетсво машин')
+                    ns_internet_cars = st.number_input('Количетсво машин', min_value=1, step=1, key=215)
                 with col2_ds:
-                    ns_interent_thigs = st.number_input('Количетсво штук')
+                    ns_interent_thigs = st.number_input('Количетсво штук', min_value=1, step=1, key=216)
                 with col3_ds:
-                    ns_ok = st.toggle('Загружены вовремя', value=True)
+                    ns_ok = st.toggle('Загружены вовремя', value=True, key=217)
                     if not ds_ok:
                         with st.popover('Кол-во', ):
-                            
-                            ns_cars = st.number_input('Введите количетсво машин', min_value=1, step=1)
+                            ns_cars = st.number_input('Введите количетсво машин', min_value=1, step=1, key=218)
+        
         with c2_ds:
             c_selected = st.container(border=True)
             with c_selected:
                 st.text('Скомпановано')
                 col1_ds, col2_ds = st.columns(2)
                 with col1_ds:
-                    ns_sta = st.number_input('СТА')
+                    ns_sta = st.number_input('СТА', min_value=0, step=1, key=219)
                 with col2_ds:
-                    ns_kta = st.number_input('КТА')
+                    ns_kta = st.number_input('КТА', min_value=0, step=1, key=220)
         
-        c_tasks = st.container(border=True)
-        with c_tasks:
+        c_place = st.container(border=True)
+        with c_place:
             st.text('Количетсво заданий на размещение')
             col1_ds, col2_ds, col3_ds, col4_ds, col5_ds = st.columns(5)
             with col1_ds:
-                ns_tasks_begin = st.number_input('Начало смены')
+                ns_place_begin = st.number_input('Начало смены', min_value=0, step=1, key=221)
             with col2_ds:
-                ns_tasks_ngb = st.number_input('НГБ')
+                ns_place_ngb = st.number_input('НГБ', min_value=0, step=1, key=222)
             with col3_ds:
-                ns_tasks_epal = st.number_input('E-PAL')
+                ns_place_epal = st.number_input('E-PAL', min_value=0, step=1, key=223)
             with col4_ds:
-                ns_tasks_created = st.number_input('созданных')
+                ns_place_created = st.number_input('созданных', min_value=0, step=1, key=224)
             with col5_ds:
-                ns_tasks_executed = st.number_input('выполненых')
+                ns_place_executed = st.number_input('выполненых', min_value=0, step=1, key=225)
        
+        col_t1, col_t2 = st.columns([1, 2])
+        with col_t1:
+            c_tasks = st.container(border=True)
+            with c_tasks:
+                count = 0 
+                percent = [None]*30
+                tasks = Report_DB_tasks(PATH_DB+NAME_DB)
+                for count, i in enumerate(tasks.get_active_tasks()):
+                    percent[count] = st.slider(str(count+1) + '. ' + i[0], 0, 100, int(i[1]), step=10, key=250+count)
+        
+        with col_t2:        
+            c_another = st.container(border=True)
+            with c_another:
+                another_col1, another_col2 = st.columns(2)
+                another_safety = another_col1.toggle('Меры безопасности', key=227)
+                text_safety = another_col1.text_area('Описание проблемы', disabled=not another_safety, key=228)
+                another_incidents = another_col2.toggle('Инциденты', key=229)
+                text_incidents = another_col2.text_area('Описание инцидента', disabled=not another_incidents, key=230)
+
 
     with peak_shift:
-        peak_report = Report_DF_peak_shift(repdb, 'peak_shift', ['date', 'income_standard', 'income_matrix', 'amount_standard', 'amount_matrix', 'amount_import', 'unplaced', 'act_bel', 'act_import', 'ill', 'vocation', 'absent', 'on_shift', 'overtime', 'safety', 'burden', 'incidents'])
-        try:
-            flag_report = True    
-            today_list = peak_report.df[peak_report.df['date'] == today.strftime('%d.%m.%Y')].values.tolist()[0]
-            print(today_list)
-        except Exception as e:
-            today_list = [0] * 17
-            flag_report = False
-        
-        df_chart = peak_report.df[['date', 'income_standard', 'income_matrix', 'amount_standard', 'amount_matrix', 'amount_import']].tail(7)
-        df_chart['date'] = pd.to_datetime(df_chart['date'], format='%d.%m.%Y')
-        st.header(f'Отчет пиковой смены за: {today}', divider='red')
-        report_col1, def_col, report_col2 = st.columns([9, 1, 9])
-        with report_col1:
-            st.subheader('Входящий грузооборот')
-            income_col1, income_col2 = st.columns(2)
-            income_standard = income_col1.text_input('стандартный', placeholder='в штуках', value=today_list[1])
-            income_matrix = income_col2.text_input('матрица+', placeholder='в штуках', value=today_list[2])
-            st.subheader('Количество приходов')
-            amount_col1, amount_col2, amount_col3 = st.columns(3)
-            amount_standard = amount_col1.number_input('Стандартный', 0, 150, value=today_list[3])
-            amount_matrix = amount_col2.number_input('Матрица+', 0, 150, value=today_list[4])
-            amount_import = amount_col3.number_input('Импорт', 0, 20, value=today_list[5])
-            st.subheader('Матрица+             Акты')
-            matrix_col, act_col1, act_col2 = st.columns(3)
-            unplaced = matrix_col.text_input('Неразмещенный', value=today_list[6], placeholder='в строках')
-            act_bel = act_col1.number_input('Белорусские поставщики', 0, 20, value=today_list[7])
-            act_import = act_col2.number_input('Иппорт;', 0, 20, value=today_list[8])
-            st.subheader('Штатное расписание')
-            staff_col1, staff_col2, staff_col3, staff_col4 = st.columns(4)
-            ill = staff_col1.number_input('Больничный', 0, 10, value=today_list[9])
-            vocation = staff_col2.number_input('Отпуск', 0, 10, value=today_list[10])
-            absent = staff_col3.number_input('Отсутствуют', 0, 10, value=today_list[11])
-            overtime = staff_col4.number_input('Переработка', 0, 50, value=today_list[13], placeholder='в часах')
-            another_col1, another_col2 = st.columns(2)
-            another_safety = another_col1.toggle('Меры безопасности')
-            text_safety = another_col1.text_area('Описание проблемы', value=today_list[14], disabled=not another_safety)
-            another_incidents = another_col2.toggle('Инциденты')
-            text_incidents = another_col2.text_area('Описание инцидента', value=today_list[16], disabled=not another_incidents)
-            #print (peak_report.req)
-        with report_col2:
-            income_col1, income_col2 = st.columns(2)
-            income_col1.write('Стандартный')
-            income_col1.line_chart(df_chart[['date','income_standard']], x='date', height=250)
-            income_col2.write('Матрица+')
-            income_col2.line_chart(df_chart[['date','income_matrix']], x='date', height=250)
 
-            fig = go.Figure(data=[
-                go.Bar(name='Стандартный', x= df_chart['date'], y = df_chart['amount_standard']),
-                go.Bar(name='Матрица',  x= df_chart['date'], y = df_chart['amount_matrix']),
-                go.Bar(name='Импорт',  x= df_chart['date'].tail(10), y = df_chart['amount_import'])
-                ])
-            st.write('Приходы:')        
-            st.plotly_chart(fig, use_container_width=True)
+        flag_report = False        
+        st.subheader(f'Отчет пиковой смены за: {today}', divider='red')
+       
+
+        c_staff = st.container(border=True)
+        with c_staff:
+            st.text('Штат смены: 23 чел')
+            col1_ps, col2_ps, col3_ps, col4_ps = st.columns(4)
+            with col1_ps:
+                ns_ill = st.number_input('Больничный', min_value=0, max_value=20, step=1, placeholder='кол-во', key=301)
+            with col2_ps:
+                ns_vocation= st.number_input('Отпуск', min_value=0, max_value=20, step=1, placeholder='кол-во', key=302)
+            with col3_ps:
+                ns_abscent = st.number_input('Отсутвтует', min_value=0, max_value=20, step=1, placeholder='кол-во', key=303)
+            with col4_ps:
+                ns_overtime = st.text_input('Переработка', value="0", placeholder='в часах', key=304)
+        
+        c1_ps, c2_ps = st.columns([3, 1])
+        with c1_ps:
+            c_in = st.container(border=True)
+            with c_in:
+                col1_ps, col2_ps, col3_ps = st.columns(3)
+            
+                with col1_ps:
+                    st.text('Стандартный')
+                    ns_s_xras = st.number_input('Кол-во', min_value=0, step=1, key=305)
+                    ns_s_lines = st.text_input('Строки', key=306)
+                    ns_s_tings = st.text_input('Штуки', key=307)
+                with col2_ps:
+                    st.text('Срочный')
+                    ns_m_car = st.number_input('Кол-во', min_value=0, step=1, key=308)
+                    ns_m_lines = st.text_input('Строки', key=309)
+                    ns_m_tings = st.text_input('Штуки', key=310)
+                with col3_ps:
+                    st.text('Импорт')
+                    ns_i_cars = st.number_input('Кол-во', min_value=0, step=1, key=311)
+                    ns_i_lines = st.text_input('Строки', key=312)
+                    ns_i_tings = st.text_input('Штуки', key=313)
+        with c2_ps:    
+            c_place = st.container(border=True)
+            with c_place:
+                st.text('Количетсво заданий на размещение')
+                ns_place_begin = st.number_input('Начало смены', min_value=0, step=1, key=314)
+                ns_place_created = st.number_input('созданных', min_value=0, step=1, key=315)
+                ns_place_executed = st.number_input('выполненых', min_value=0, step=1, key=316)
+       
+        col_t1, col_t2 = st.columns([1, 2])
+        with col_t1:
+            c_tasks = st.container(border=True)
+            with c_tasks:
+                count = 0 
+                percent = [None]*30
+                tasks = Report_DB_tasks(PATH_DB+NAME_DB)
+                for count, i in enumerate(tasks.get_active_tasks()):
+                    percent[count] = st.slider(str(count+1) + '. ' + i[0], 0, 100, int(i[1]), step=10, key=350+count)
+        
+        with col_t2:        
+            c_another = st.container(border=True)
+            with c_another:
+                another_col1, another_col2 = st.columns(2)
+                another_safety = another_col1.toggle('Меры безопасности', key=317)
+                text_safety = another_col1.text_area('Описание проблемы', disabled=not another_safety, key=318)
+                another_incidents = another_col2.toggle('Инциденты', key=319)
+                text_incidents = another_col2.text_area('Описание инцидента', disabled=not another_incidents, key=320)
+        
         
         if not flag_report:
             message_button = 'Сохранить отчет'
@@ -401,7 +456,7 @@ def reports():
         try:
             income_standard = int(income_standard)
             income_matrix = int(income_matrix)
-            if income_standard > 0 and income_matrix > 0 and amount_standard > 0:
+            if income_standard > 0 and income_matrix > 0:
                 check_data = True
         except Exception as e:
             logger.warning(f'No integer data {e}')
@@ -412,10 +467,10 @@ def reports():
             peak_report_table = Report_DB_shift(PATH_DB+NAME_DB)
             staff_amount = Report_DB_staff(PATH_DB+NAME_DB)
             
-            list_to_save = (today.strftime('%d.%m.%Y'), income_standard, income_matrix, amount_standard, amount_matrix, amount_import, unplaced, act_bel, act_import, ill, vocation, absent, staff_amount.get_mans_shift(5)-ill-vocation-absent, overtime, text_safety, procedure.get_burden(staff_amount.get_mans_shift(5)-ill-vocation-absent, income_standard+income_matrix*10), text_incidents)
+            #list_to_save = (today.strftime('%d.%m.%Y'), income_standard, income_matrix, amount_standard, amount_matrix, amount_import, unplaced, act_bel, act_import, ill, vocation, absent, staff_amount.get_mans_shift(5)-ill-vocation-absent, overtime, text_safety, procedure.get_burden(staff_amount.get_mans_shift(5)-ill-vocation-absent, income_standard+income_matrix*10), text_incidents)
 
             
-            peak_report_table.save_report(list_to_save, flag_report)         
+            #peak_report_table.save_report(list_to_save, flag_report)         
             st.success('Отчет сохранен')
 
 
@@ -466,14 +521,48 @@ def reports():
                 letter_body = letter_begin + letter_body + f'<tr><td colspan="2"><B>Процент выполнения {cb[0]}%</B></td></tr>' + '</tbody></table>'
                 procedure.send_letter('Отчет по уборке', letter_body, [
                     'andrej.petrovyh@patio-minsk.by', 
-                    'vladimir.rabchenya@patio-minsk.by'
+                    #'vladimir.rabchenya@patio-minsk.by'
                     ])
                 st.success('Отчет сохранен и отправлен')
            
 
         
 def settings():
-    pass
+
+    today = date.today()
+
+    staff = Report_DB_staff(PATH_DB+NAME_DB)
+    job = Report_DB_job(PATH_DB+NAME_DB)
+
+    set_staff, set_email = st.tabs(['Настройки штата', 'Рассылка'])
+    with set_staff:
+        set_col1, set_col2, set_col3, set_col4, set_col5 = st.columns([2,3,3,2,1])
+        with set_col1:
+            select_action = st.radio('Действие', ['Новый сотрудник', 'Увольнение', 'Перевод'])
+        with set_col2:
+            select_boss = st.selectbox('Смена', staff.get_boss_staff())
+        with set_col3:
+            if select_action == 'Новый сотрудник':
+                name = st.text_input('Введите ФИО сотрудника')
+                id = st.text_input('Введите табельный номер')
+            else:
+                name = st.selectbox('Выберите сотрудника', staff.get_mans_list(staff.get_number_shift(select_boss)))
+        with set_col4:
+            if select_action in ['Новый сотрудник', 'Перевод']:
+                select_job = st.selectbox('Должность', job.get_job_list())
+            
+        with set_col5:
+            action_date = st.date_input('Дата', max_value=today, format='DD.MM.YYYY')
+                    
+        if st.button('Сохранить'):
+            if select_action == 'Новый сотрудник':
+                staff.add_new_man(id, name, job.get_job_id(select_job), staff.get_number_shift(select_boss), action_date.strftime("%d.%m.%Y"))
+            elif select_action == 'Увольнение':
+                staff.delete_man(name, action_date.strftime("%d.%m.%Y"))
+            elif select_action == 'Перевод':
+                staff.change_job(name, job.get_job_id(select_job))
+            st.success('Данные сохранены')
+
 
 def staff():
     flag_out = False
@@ -485,7 +574,7 @@ def staff():
         num = num + 1
         staff_man_dict[_] = num
     
-    staff.df = staff.df[(staff.df['shift'] < 6) & (staff.df['job'] != 7) & (staff.df['job'] != 13)]
+    staff.df = staff.df[(staff.df['shift'] < 6) & (staff.df['job'] != 7)]
 
     staff.df['date_in'] = pd.to_datetime(staff.df['date_in'], dayfirst=True)
     staff.df['dismiss'] = pd.to_datetime(staff.df['dismiss'], dayfirst=True)
@@ -655,9 +744,14 @@ def staff():
                 
 
         with c2_t3:
+            out = Report_DB(PATH_DB+NAME_DB)
             if flag_out:
                 st.image('ni.png', width=250)
             if st.button('Распечатать', disabled = not flag_out):
+               
+                for i in name_out:
+                    print(i)
+                    out.add_out(i, reason_out)
                 filename = "ni.png"
                 #print(win32print.EnumPrinters(3, '\\\\10.110.10.68'))
                 printer_name = 'DUB-NACHSM-426'
@@ -687,6 +781,35 @@ def staff():
 
 
 def analitics():
+
+    # перенесено из отчета пиковой смены
+    # ------------------------------------------------------------
+    # peak_report = Report_DF_peak_shift(repdb, 'peak_shift', ['date', 'income_standard', 'income_matrix', 'amount_standard', 'amount_matrix', 'amount_import', 'unplaced', 'act_bel', 'act_import', 'ill', 'vocation', 'absent', 'on_shift', 'overtime', 'safety', 'burden', 'incidents'])
+    #     try:
+    #         flag_report = True    
+    #         today_list = peak_report.df[peak_report.df['date'] == today.strftime('%d.%m.%Y')].values.tolist()[0]
+    #         print(today_list)
+    #     except Exception as e:
+    #         today_list = [0] * 17
+    #         flag_report = False
+    # ------------------------------------------------------------
+    # with report_col2:
+    #         income_col1, income_col2 = st.columns(2)
+    #         income_col1.write('Стандартный')
+    #         income_col1.line_chart(df_chart[['date','income_standard']], x='date', height=250)
+    #         income_col2.write('Матрица+')
+    #         income_col2.line_chart(df_chart[['date','income_matrix']], x='date', height=250)
+
+    #         fig = go.Figure(data=[
+    #             go.Bar(name='Стандартный', x= df_chart['date'], y = df_chart['amount_standard']),
+    #             go.Bar(name='Матрица',  x= df_chart['date'], y = df_chart['amount_matrix']),
+    #             go.Bar(name='Импорт',  x= df_chart['date'].tail(10), y = df_chart['amount_import'])
+    #             ])
+    #         st.write('Приходы:')        
+    #         st.plotly_chart(fig, use_container_width=True)
+    # ------------------------------------------------------------
+
+
     
     report_shift = Report_DF_report_shift(repdb, 'report_shift', ['id', 'date_shift', 'of_day', 'shift_id', 'staff_shift', 'add', 'ill', 'vacation', 'absence', 'lines', 'pieces', 'sku', 'effect'])
     
