@@ -87,7 +87,7 @@ class Report_DB_job(Report_DB):
         
 
 class Report_DB_check_list(Report_DB):
-    def save_report(self, check_date, pick_list, mez_list, bal_list, ramp_list, pradius_list, trush_list):
+    def save_report(self, check_date, pick_list, mez_list, bal_list, ramp_list, trush_list, pradius_list, percent):
         pick_list = json.dumps(pick_list)
         mez_list = json.dumps(mez_list)
         bal_list = json.dumps(bal_list)
@@ -96,12 +96,16 @@ class Report_DB_check_list(Report_DB):
         trush_list = json.dumps(trush_list)
 
         with self.connection:
-            return self.cursor.execute("INSERT INTO check_list (check_date, pick_zone, mez_zone, bal_zone, ramp_zone, pradius_zone, trush_zone) VALUES (?,?,?,?,?,?,?)", (check_date, pick_list, mez_list, bal_list, ramp_list, pradius_list, trush_list))
+            return self.cursor.execute("INSERT INTO check_list (check_date, pick_zone, mez_zone, bal_zone, ramp_zone, trush_zone, pradius_zone, percent) VALUES (?,?,?,?,?,?,?,?)", (check_date, pick_list, mez_list, bal_list, ramp_list, trush_list, pradius_list, percent))
         
     
     def get_last_date(self):
         with self.connection:
-            return self.cursor.execute("SELECT check_date FROM check_list ORDER BY check_date DESC LIMIT 1").fetchone()[0]
+            return self.cursor.execute("SELECT check_date FROM check_list ORDER BY id DESC LIMIT 1").fetchone()[0]
+
+class Report_DF_check_list(Report_DF):
+    def get_data(self):
+        pass
 
 class Report_DB_tasks(Report_DB):
     def get_active_tasks(self):
