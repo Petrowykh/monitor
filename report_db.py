@@ -35,14 +35,25 @@ class Report_DF_report_shift(Report_DF):
 class Report_DF_peak_shift(Report_DF):
     pass
 
-class Report_DB_shift(Report_DB):
+class Report_DB_peak_shift(Report_DB):
     def save_report(self, list_db, flag):
-        print(list_db[0])
         with self.connection:
             if flag:
-                self.cursor.execute(f"DELETE FROM peak_shift WHERE date='{list_db[0]}'")
+                self.cursor.execute(f"DELETE FROM peak_shift WHERE date='{list_db[1]}'")
             #self.connection.commit()
-            return self.cursor.execute("INSERT INTO peak_shift (date, income_standard, income_matrix, amount_standard, amount_matrix,amount_import, unplaced, act_bel, act_import, ill, vocation, absent, on_shift, overtime, safety, burden, incidents) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", list_db)
+            return self.cursor.execute("INSERT INTO peak_shift (date_shift, mans, ill, vacation, absent, overtime, medic, standard_docs, standard_lines, standard_thigs, standard_docs_ok, standard_acts, matrix_docs, matrix_lines, matrix_things, matrix_docs_ok, matrix_acts, import_docs, import_lines, import_things, import_docs_ok, import_acts, safety, incidents, tasks) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", list_db)
+
+class Report_DB_report_shift(Report_DB):
+    def save_report(self, list_db, list_db1, flag_dn, flag):
+        with self.connection:
+            if flag:
+                return self.cursor.execute(f"DELETE FROM report_shift WHERE date='{list_db[1]}'")
+            elif flag_dn:
+                print('-----', list_db1)
+                print(self.cursor.execute(f"SELECT date_shift from report_shift").fetchall())
+                self.cursor.execute(f"UPDATE report_shift SET internet_cars = {list_db1[1]}, internet_things = {list_db1[2]}, cars_time = {list_db1[3]} WHERE date_shift = {list_db1[0]}") 
+            self.cursor.execute("INSERT INTO report_shift (date_shift, nd, shift_id, mans, ill, vacation, absent, overtime, medic, lines_out, things_out, lines_in, things_in, lines_selected, things_selected, zone_save, zone_out, unloaded_warehouse, unloaded_logistic, internet_cars, internet_things, cars_time, place_begin, place_ngb, place_epal, place_created, place_executed, safety, incidents, volume, tasks) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", list_db)      
+            self.connection.commit()
             
 class Report_DB_staff(Report_DB):
     def get_mans_count_shift(self, shift):
@@ -110,13 +121,21 @@ class Report_DF_check_list(Report_DF):
 class Report_DB_tasks(Report_DB):
     def get_active_tasks(self):
         with self.connection:
-            return self.cursor.execute(f"SELECT description, percent FROM tasks WHERE active = True").fetchall()
+            return self.cursor.execute(f"SELECT id_tasks, description, percent FROM tasks WHERE active = True").fetchall()
         
     def add_tasks(self, description):
         with self.connection:
             date_now = datetime.datetime.now().strftime("%d/%m/%Y")
             return self.cursor.execute("INSERT INTO tasks (tasks_date, description, percent, active) VALUES (?, ?, ?, ?)", (date_now, description, 0, True))
-        
+    
+    def change_tasks(self, tasks):
+        with self.connection:
+            for key, value in tasks.items():
+                if value != 100:
+                    self.cursor.execute(f"UPDATE tasks SET percent = {int(value)} WHERE id_tasks = {int(key)}")
+                else:
+                    self.cursor.execute(f"UPDATE tasks SET percent = {int(value)}, active = False WHERE id_tasks = {int(key)}")
+            self.connection.commit()
 
 class Report_DB_out(Report_DB):
     def add_out(self, name, reason):

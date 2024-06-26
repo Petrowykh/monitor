@@ -128,9 +128,9 @@ def info():
         with col_i1:
             st.write(f'{count+1}')
         with col_i2:
-            st.write(f'{i[0]}')
+            st.write(f'{i[1]}')
         with col_i3:
-            st.write(f'{i[1]} %')
+            st.write(f'{i[2]} %')
     
     
     with st.expander('Добавить задачу'):    
@@ -212,40 +212,41 @@ def reports():
     staff = Report_DB_staff(PATH_DB+NAME_DB)
     
     day_shift, night_shift, peak_shift, check_list = st.tabs(['Дневная смена', 'Ночная смена', 'Пиковая смена', 'Чек-лист уборки'])
-    now_date = datetime.datetime.now().strftime("%d-%m-%Y")
+    now_date = datetime.datetime.now().strftime("%d/%m/%Y")
     now_time = datetime.datetime.now().strftime("%H:%M:%S")
     now_hour = int(now_time.split(':')[0])
 
     #check_data = False
     flag_hour = False
+
+    #day shift
     with day_shift:
         ds_sh_col1, ds_sh_col2 = st.columns(2)
         with ds_sh_col1:
             st.subheader(f'Отчет дневной смены за: {now_date}', divider='red')
         with ds_sh_col2:
-            flag_hour = True if now_hour >= 8 and now_hour <= 9 else False
-            ds_ns = st.selectbox('Начельник смены', staff.get_boss_staff(), key=133, disabled= not flag_hour)
+            flag_hour = True #if now_hour >= 8 and now_hour <= 9 else False
+            ds_ns = st.selectbox('Начельник смены', staff.get_boss_staff(), key=101, disabled= not flag_hour)
         ds_staff_cont = st.container(border=True)
         with ds_staff_cont:
             count_shift = staff.get_mans_count_shift(staff.get_number_shift(ds_ns))
             st.text(f'Штат смены: {count_shift}')
             ds_staff_col1, ds_staff_col2, ds_staff_col3, ds_staff_col4, ds_staff_col5 = st.columns(5)
             with ds_staff_col1:
-                ds_ill = st.number_input('Больничный', min_value=0, max_value=20, step=1, placeholder='кол-во', key=101)
+                ds_ill = st.number_input('Больничный', min_value=0, max_value=20, step=1, placeholder='кол-во', key=102)
             with ds_staff_col2:
-                ds_vocation= st.number_input('Отпуск', min_value=0, max_value=20, step=1, placeholder='кол-во', key=102)
+                ds_vacation= st.number_input('Отпуск', min_value=0, max_value=20, step=1, placeholder='кол-во', key=103)
             with ds_staff_col3:
-                ds_abscent = st.number_input('Отсутвтует', min_value=0, max_value=20, step=1, placeholder='кол-во', key=103)
+                ds_absent = st.number_input('Отсутвтует', min_value=0, max_value=20, step=1, placeholder='кол-во', key=104)
             with ds_staff_col4:
-                ds_overtime = st.text_input('Переработка', value="0", key=104, help='общее время в часах')
+                ds_overtime = st.text_input('Переработка', value="0", key=105, help='общее время в часах')
                 if not ds_overtime.isnumeric():
                     st.warning('Переработка должна быть в часах')
             with ds_staff_col5:
-                ds_medic = st.number_input('Медосмотр', min_value=0, max_value=count_shift, step=1, placeholder='кол-во', key=131)
-            if count_shift-ds_ill-ds_vocation-ds_abscent != ds_medic:
-                st.warning('Не все прошли медосмотр')
-            if not ds_overtime.isnumeric():
-                st.warning('Переработка должна быть в часах')
+                ds_medic = st.number_input('Медосмотр', value=count_shift, min_value=0, max_value=count_shift, step=1, placeholder='кол-во', key=106)
+                if count_shift-ds_ill-ds_vacation-ds_absent != ds_medic:
+                    st.warning('Не все прошли медосмотр')
+            
         ds_col1, ds_col2, ds_col3 = st.columns([3, 1, 1])
         with ds_col1:
             ds_goods_cont1 = st.container(border=True)
@@ -254,16 +255,16 @@ def reports():
             
                 with ds_goods_col1:
                     st.text('Грузооборот исходящий')
-                    ds_out_lines = st.text_input('Строки исх', value="0", key=105)
-                    ds_out_things = st.text_input('Штуки исх', value="0",key=106)
+                    ds_out_lines = st.text_input('Строки исх', value="0", key=107)
+                    ds_out_things = st.text_input('Штуки исх', value="0",key=108)
                 with ds_goods_col2:
                     st.text('Грузооборот входящий')
-                    ds_in_lines = st.text_input('Строки вх', value="0",key=107)
-                    ds_in_things = st.text_input('Штуки вх', value="0",key=108)
+                    ds_in_lines = st.text_input('Строки вх', value="0",key=109)
+                    ds_in_things = st.text_input('Штуки вх', value="0",key=110)
                 with ds_goods_col3:
                     st.text('Отобрано')
-                    ds_selected_lines = st.text_input('Строки отборан', value="0",key=109)
-                    ds_selected_things = st.text_input('Штуки отобран', value="0",key=110)
+                    ds_selected_lines = st.text_input('Строки отборан', value="0",key=111)
+                    ds_selected_things = st.text_input('Штуки отобран', value="0",key=112)
                 if not all([ds_out_lines.isnumeric(), ds_out_things.isnumeric(),
                             ds_in_lines.isnumeric(), ds_in_things.isnumeric(),
                             ds_selected_lines.isnumeric(), ds_selected_things.isnumeric()]):
@@ -273,16 +274,16 @@ def reports():
             ds_goods_cont2 = st.container(border=True)
             with ds_goods_cont2:
                 st.text('Анализ свободного места', help='Количетсво свободных ячеек')
-                ds_zone_save = st.text_input('Зона хранения', key=111)
-                ds_zone_out = st.text_input('Зона отбора', key=112)   
+                ds_zone_save = st.text_input('Зона хранения', value="0", key=113)
+                ds_zone_out = st.text_input('Зона отбора', value="0", key=114)   
                 if not all([ds_zone_save.isnumeric(), ds_zone_out.isnumeric()]):
                     st.warning('Значения должны быть целыми числами')
         with ds_col3:
             ds_goods_cont3 = st.container(border=True)    
             with ds_goods_cont3:
                 st.text('Неотгруженный товар по вине')
-                ds_unloaded_warehouse = st.number_input('Склад', min_value=0, step=1, key=113)
-                ds_unloaded_logistic = st.number_input('Логистика', min_value=0, step=1, key=114) 
+                ds_unloaded_warehouse = st.number_input('Склад', min_value=0, step=1, key=115)
+                ds_unloaded_logistic = st.number_input('Логистика', min_value=0, step=1, key=116) 
         
         ds_car_col1, ds_car_col2 = st.columns(2)
         with ds_car_col1:
@@ -291,14 +292,16 @@ def reports():
                 st.text('Интернет магазин УТРО')
                 ds_internet_col1, ds_internet_col2, ds_internet_col3 = st.columns(3)
                 with ds_internet_col1:
-                    ds_internet_cars_morning = st.number_input('Количетсво машин', min_value=1, key=115)
+                    ds_internet_cars_morning = st.number_input('Количетсво машин', min_value=1, key=117)
                 with ds_internet_col2:
-                    ds_interent_things_morning = st.text_input('Количетсво штук', key=116)
+                    ds_interent_things_morning = st.text_input('Количетсво штук', value="0", key=118)
                 with ds_internet_col3:
-                    ds_ok_morning = st.toggle('Загружены вовремя', value=True, key=117)
+                    ds_ok_morning = st.toggle('Загружены вовремя', value=True, key=119)
                     if not ds_ok_morning:
                         with st.popover('Кол-во', ):
-                            ds_cars_morning = st.number_input('Введите количетсво машин', min_value=1, step=1, key=118)
+                            ds_cars_morning = st.number_input('Введите количетсво машин', min_value=1, step=1, key=120)
+                    else:
+                        ds_cars_morning = 0
                 if not(ds_interent_things_morning.isnumeric()):
                    st.warning('Значения должны быть целыми числами')
 
@@ -308,14 +311,16 @@ def reports():
                 st.text('Интернет магазин ВЕЧЕР')
                 ds_internet_col1, ds_internet_col2, ds_internet_col3 = st.columns(3)
                 with ds_internet_col1:
-                    ds_internet_cars_evening = st.number_input('Количетсво машин', min_value=1, key=119)
+                    ds_internet_cars_evening = st.number_input('Количетсво машин', min_value=1, key=121)
                 with ds_internet_col2:
-                    ds_interent_things_evening = st.text_input('Количетсво штук', key=120)
+                    ds_interent_things_evening = st.text_input('Количетсво штук', value="0", key=122)
                 with ds_internet_col3:
-                    ds_ok_evening = st.toggle('Загружены вовремя', value=True, key=140)
+                    ds_ok_evening = st.toggle('Загружены вовремя', value=True, key=123)
                     if not ds_ok_evening:
                         with st.popover('Кол-во', ):
-                            ds_cars_evening = st.number_input('Введите количетсво машин', min_value=1, step=1, key=122)
+                            ds_cars_evening = st.number_input('Введите количетсво машин', min_value=1, step=1, key=124)
+                    else: 
+                        ds_cars_evening = 0
                 if not(ds_interent_things_evening.isnumeric()):
                     st.warning('Значения должны быть целыми числами')
         
@@ -324,66 +329,88 @@ def reports():
             st.text('Количетсво заданий на размещение')
             ds_place_col1, ds_place_col2, ds_place_col3, ds_place_col4, ds_place_col5 = st.columns(5)
             with ds_place_col1:
-                ds_place_begin = st.number_input('Начало смены', min_value=0, step=1, key=122)
+                ds_place_begin = st.number_input('Начало смены', min_value=0, step=1, key=125)
             with ds_place_col2:
-                ds_place_ngb = st.number_input('НГБ', min_value=0, step=1, key=123)
+                ds_place_ngb = st.number_input('НГБ', min_value=0, step=1, key=126)
             with ds_place_col3:
-                ds_place_epal = st.number_input('E-PAL', min_value=0, step=1, key=124)
+                ds_place_epal = st.number_input('E-PAL', min_value=0, step=1, key=127)
             with ds_place_col4:
-                ds_place_created = st.number_input('созданных', min_value=0, step=1, key=125)
+                ds_place_created = st.number_input('созданных', min_value=0, step=1, key=128)
             with ds_place_col5:
-                ds_place_executed = st.number_input('выполненых', min_value=0, step=1, key=126)
+                ds_place_executed = st.number_input('выполненых', min_value=0, step=1, key=129)
 
         ds_tasks_col1,  ds_tasks_col2 = st.columns([1, 2])
         with ds_tasks_col1:
             ds_tasks_cont = st.container(border=True)
             with ds_tasks_cont:
-                count = 0 
+                count = 0
                 tasks = Report_DB_tasks(PATH_DB+NAME_DB)
-                ds_percent = [None]*int(len(tasks.get_active_tasks()))
+                ds_percent = {}
                 for count, i in enumerate(tasks.get_active_tasks()):
-                    ds_percent[count] = st.slider(str(count+1) + '. ' + i[0], 0, 100, int(i[1]), step=10, key=150+count)
+                    ds_percent[i[0]] = st.slider(i[1], 0, 100, int(i[2]), step=10, key=150+count)
         
-        with ds_tasks_col2:        
+        with ds_tasks_col2:   
             ds_another_cont = st.container(border=True)
             with ds_another_cont:
-                ds_another_col1, ds_another_col2 = st.columns(2)
-                with ds_another_col1:
-                    another_safety = st.toggle('Меры безопасности', key=127)
-                    ds_text_safety = st.text_area('Описание проблемы', disabled=not another_safety, key=128)
-                with ds_another_col2:
-                    another_incidents = st.toggle('Инциденты', key=129)
-                    ds_text_incidents = st.text_area('Описание инцидента', disabled=not another_incidents, key=130)
+                st.text('Сборка - остаток')
+                ds_lines_col1, ds_lines_col2, ds_lines_col3 = st.columns(3)
+                with ds_lines_col1:
+                    ds_main_lines = st.text_input('ЦС', value=0, key=130)
+                with ds_lines_col2:
+                    ds_val_lines = st.text_input('Ценник', value=0, key=131)
+                with ds_lines_col3:    
+                    ds_bal_lines = st.text_input('Балкон', value=0, key=132)
+            ds_another_cont1 = st.container(border=True)
+            with ds_another_cont1:
+                ds_rem_col1, ds_rem_col2 = st.columns(2)
+                with ds_rem_col1:
+                    another_safety = st.toggle('Меры безопасности', key=133)
+                    ds_text_safety = st.text_area('Описание проблемы', disabled=not another_safety, key=134)
+                with ds_rem_col2:
+                    another_incidents = st.toggle('Инциденты', key=135)
+                    ds_text_incidents = st.text_area('Описание инцидента', disabled=not another_incidents, key=136)
 
         ds_report_save = st.button('Сохранить отчет', key=100, disabled=not flag_hour)
+        if ds_report_save:
+            flag_DN = True
+            report_table = Report_DB_report_shift(PATH_DB+NAME_DB)
+            
+            list_to_save = (now_date, flag_DN, staff.get_number_shift(ds_ns), count_shift, ds_ill, ds_vacation, ds_absent, ds_overtime, ds_medic, ds_out_lines, ds_out_things, ds_in_lines, ds_in_things, ds_selected_lines, ds_selected_things, ds_zone_save, ds_zone_out, ds_unloaded_warehouse, ds_unloaded_logistic, ds_internet_cars_evening, ds_interent_things_evening, ds_cars_evening, ds_place_begin, ds_place_ngb, ds_place_epal, ds_place_created, ds_place_executed, ds_text_safety, ds_text_incidents, 100, json.dumps(ds_percent))
+            
+            list_to_save_internet = (now_date, ds_internet_cars_morning, ds_interent_things_morning, ds_cars_morning)
+
+            report_table.save_report(list_to_save, list_to_save_internet, flag_DN, False)         
+            tasks.change_tasks(ds_percent)
+            st.success('Отчет сохранен')
         
 
+    # night shift
     with night_shift:
         ns_sh_col1, ns_sh_col2 = st.columns(2)
         with ns_sh_col1:
             st.subheader(f'Отчет дневной смены за: {now_date}', divider='red')
         with ns_sh_col2:
             flag_hour = True if now_hour >= 20 and now_hour <= 21 else False
-            ns_ns = st.selectbox('Начельник смены', staff.get_boss_staff(), key=233, disabled=not flag_hour)
+            ns_ns = st.selectbox('Начельник смены', staff.get_boss_staff(), key=201, disabled=not flag_hour)
         ns_staff_cont = st.container(border=True)
         with ns_staff_cont:
             count_shift = staff.get_mans_count_shift(staff.get_number_shift(ns_ns))
             st.text(f'Штат смены: {count_shift}')
             ns_staff_col1, ns_staff_col2, ns_staff_col3, ns_staff_col4, ns_staff_col5 = st.columns(5)
             with ns_staff_col1:
-                ns_ill = st.number_input('Больничный', min_value=0, max_value=20, step=1, placeholder='кол-во', key=201)
+                ns_ill = st.number_input('Больничный', min_value=0, max_value=20, step=1, placeholder='кол-во', key=202)
             with ns_staff_col2:
-                ns_vocation= st.number_input('Отпуск', min_value=0, max_value=20, step=1, placeholder='кол-во', key=202)
+                ns_vacation= st.number_input('Отпуск', min_value=0, max_value=20, step=1, placeholder='кол-во', key=203)
             with ns_staff_col3:
-                ns_abscent = st.number_input('Отсутвтует', min_value=0, max_value=20, step=1, placeholder='кол-во', key=203)
+                ns_abscent = st.number_input('Отсутвтует', min_value=0, max_value=20, step=1, placeholder='кол-во', key=204)
             with ns_staff_col4:
-                ns_overtime = st.text_input('Переработка', value="0", help='общее время в часах', key=204)
+                ns_overtime = st.text_input('Переработка', value="0", help='общее время в часах', key=205)
                 if not ns_overtime.isnumeric():
                     st.warning('Переработка должна быть в часах')
             with ns_staff_col5:
-                ns_medic = st.number_input('Медосмотр', min_value=0, max_value=count_shift, step=1, placeholder='кол-во', key=231)
-            if count_shift-ns_ill-ns_vocation-ns_abscent != ns_medic:
-                st.warning('Не все прошли медосмотр')
+                ns_medic = st.number_input('Медосмотр', value = count_shift, min_value=0, max_value=count_shift, step=1, placeholder='кол-во', key=206)
+                if count_shift-ns_ill-ns_vacation-ns_abscent != ns_medic:
+                    st.warning('Не все прошли медосмотр')
         ns_col1, ns_col2, ns_col3 = st.columns([3, 1, 1])
         with ns_col1:
             ns_goods_cont1 = st.container(border=True)
@@ -392,16 +419,16 @@ def reports():
             
                 with ns_goods_col1:
                     st.text('Грузооборот исходящий')
-                    ns_out_lines = st.text_input('Строки исх', value="0", key=205)
-                    ns_out_things = st.text_input('Штуки исх', value="0", key=206)
+                    ns_out_lines = st.text_input('Строки исх', value="0", key=207)
+                    ns_out_things = st.text_input('Штуки исх', value="0", key=208)
                 with ns_goods_col2:
                     st.text('Грузооборот входящий')
-                    ns_in_lines = st.text_input('Строки вх', value="0", key=207)
-                    ns_in_things = st.text_input('Штуки вх', value="0", key=208)
+                    ns_in_lines = st.text_input('Строки вх', value="0", key=209)
+                    ns_in_things = st.text_input('Штуки вх', value="0", key=210)
                 with ns_goods_col3:
                     st.text('Отобрано')
-                    ns_selected_lines = st.text_input('Строки отборан', value="0", key=209)
-                    ns_selected_things = st.text_input('Штуки отобран', value="0", key=210)
+                    ns_selected_lines = st.text_input('Строки отборан', value="0", key=211)
+                    ns_selected_things = st.text_input('Штуки отобран', value="0", key=212)
                 if not all([ns_out_lines.isnumeric(),   ns_out_things.isnumeric(),
                             ns_in_lines.isnumeric(), ns_in_things.isnumeric(),
                             ns_selected_lines.isnumeric(), ns_selected_things.isnumeric()]):
@@ -410,16 +437,16 @@ def reports():
             ns_goods_cont2 = st.container(border=True)
             with ns_goods_cont2:
                 st.text('Анализ свободного места')
-                ns_zone_save = st.text_input('Зона хранения', key=211)
-                ns_zone_out = st.text_input('Зона отбора', key=212)    
+                ns_zone_save = st.text_input('Зона хранения', value="0", key=213)
+                ns_zone_out = st.text_input('Зона отбора', value="0", key=214)    
                 if not all([ns_zone_save.isnumeric(), ns_zone_out.isnumeric()]):
                     st.warning('Значения должны быть целыми числами')
         with ns_col3:
             ns_goods_cont3 = st.container(border=True)    
             with ns_goods_cont3:
                 st.text('Неотгруженный товар по вине')
-                ns_unloaded_warehouse = st.number_input('Склад', min_value=0, step=1, key=213)
-                ns_unloaded_logistic = st.number_input('Логистика', min_value=0, step=1, key=214) 
+                ns_unloaded_warehouse = st.number_input('Склад', min_value=0, step=1, key=215)
+                ns_unloaded_logistic = st.number_input('Логистика', min_value=0, step=1, key=216) 
         
         
         ns_place_cont = st.container(border=True)
@@ -427,46 +454,75 @@ def reports():
             st.text('Количетсво заданий на размещение')
             ns_place_col1, ns_place_col2, ns_place_col3, ns_place_col4, ns_place_col5 = st.columns(5)
             with ns_place_col1:
-                ns_place_begin = st.number_input('Начало смены', min_value=0, step=1, key=221)
+                ns_place_begin = st.number_input('Начало смены', min_value=0, step=1, key=217)
             with ns_place_col2:
-                ns_place_ngb = st.number_input('НГБ', min_value=0, step=1, key=222)
+                ns_place_ngb = st.number_input('НГБ', min_value=0, step=1, key=218)
             with ns_place_col3:
-                ns_place_epal = st.number_input('E-PAL', min_value=0, step=1, key=223)
+                ns_place_epal = st.number_input('E-PAL', min_value=0, step=1, key=219)
             with ns_place_col4:
-                ns_place_created = st.number_input('созданных', min_value=0, step=1, key=224)
+                ns_place_created = st.number_input('созданных', min_value=0, step=1, key=220)
             with ns_place_col5:
-                ns_place_executed = st.number_input('выполненых', min_value=0, step=1, key=225)
+                ns_place_executed = st.number_input('выполненых', min_value=0, step=1, key=221)
        
         ns_tasks_col1,  ns_tasks_col2 = st.columns([1, 2])
         with ns_tasks_col1:
             ns_tasks_cont = st.container(border=True)
             with ns_tasks_cont:
-                count = 0 
+                count = 0
                 tasks = Report_DB_tasks(PATH_DB+NAME_DB)
-                ns_percent = [None]*int(len(tasks.get_active_tasks()))
+                ns_percent = {}
                 
                 for count, i in enumerate(tasks.get_active_tasks()):
-                    ns_percent[count] = st.slider(str(count+1) + '. ' + i[0], 0, 100, int(i[1]), step=10, key=250+count)
+                    ns_percent[i[0]] = st.slider(i[1], 0, 100, int(i[2]), step=10, key=250+count)
         
         with ns_tasks_col2:        
             ns_another_cont = st.container(border=True)
             with ns_another_cont:
-                ns_another_col1, ns_another_col2 = st.columns(2)
-                with ns_another_col1:
+                st.text('Сборка - остаток')
+                ns_lines_col1, ns_lines_col2, ns_lines_col3 = st.columns(3)
+                with ns_lines_col1:
+                    ns_main_lines = st.text_input('ЦС', value=0, key=222)
+                with ns_lines_col2:
+                    ns_val_lines = st.text_input('Ценник', value=0, key=223)
+                with ns_lines_col3:    
+                    ns_bal_lines = st.text_input('Балкон', value=0, key=224)
+            ns_another_cont1 = st.container(border=True)
+            with ns_another_cont1:
+                st.text('Объемы')
+                ns_volume_col1, ns_volume_col2 = st.columns(2)
+                with ns_volume_col1:
+                    ns_volume_region = st.text_input('Регионы', value=0, key=225)
+                with ns_volume_col2:
+                    ns_volume_minsk = st.text_input('Минск', value=0, key=226)
+            ns_another_cont2 = st.container(border=True)
+            with ns_another_cont2:
+                ns_rem_col1, ns_rem_col2 = st.columns(2)
+                with ns_rem_col1:
                     another_safety = st.toggle('Меры безопасности', key=227)
                     ns_text_safety = st.text_area('Описание проблемы', disabled=not another_safety, key=228)
-                with ns_another_col2:
+                with ns_rem_col2:
                     another_incidents = st.toggle('Инциденты', key=229)
                     ns_text_incidents = st.text_area('Описание инцидента', disabled=not another_incidents, key=230)
+        
         ns_report_save = st.button('Сохранить отчет', key=200, disabled=not flag_hour)
+        if ns_report_save:
+            flag_DN = False
+            report_table = Report_DB_report_shift(PATH_DB+NAME_DB)
+            
+            list_to_save = (now_date, flag_DN, staff.get_number_shift(ns_ns), count_shift, ns_ill, ns_vacation, ns_abscent, ns_overtime, ns_medic, ns_out_lines, ns_out_things, ns_in_lines, ns_in_things, ns_selected_lines, ns_selected_things, ns_zone_save, ns_zone_out, ns_unloaded_warehouse, ns_unloaded_logistic, 0, 0, 0, ns_place_begin, ns_place_ngb, ns_place_epal, ns_place_created, ns_place_executed, ns_text_safety, ns_text_incidents, 100, json.dumps(ns_percent))
+            
+            report_table.save_report(list_to_save, (), flag_DN, False)         
+            tasks.change_tasks(ns_percent)
+            st.success('Отчет сохранен')
 
+    #peak shift
     with peak_shift:
         ps_sh_col1, ps_sh_col2 = st.columns(2)
         with ps_sh_col1:
             st.subheader(f'Отчет дневной смены за: {now_date}', divider='red')
         with ps_sh_col2:
             flag_hour = True if now_hour >= 17 and now_hour <= 18 else False
-            print (now_hour, flag_hour)
+           
             ps_ns = st.selectbox('Начельник смены', staff.get_boss_staff(), index=3, key=333, disabled=not flag_hour)
         ps_staff_cont = st.container(border=True)
         with ps_staff_cont:
@@ -485,7 +541,7 @@ def reports():
                 if not ps_overtime.isnumeric():
                     st.warning('Переработка должна быть в часах')
             with ps_staff_col5:
-                ps_medic = st.number_input('Медосмотр', min_value=0, max_value=count_shift, step=1, placeholder='в часах', key=305)
+                ps_medic = st.number_input('Медосмотр', value=count_shift, min_value=0, max_value=count_shift, step=1, placeholder='в часах', key=305)
             if count_shift-ps_ill-ps_vocation-ps_abscent != ps_medic:
                 st.warning('Не все прошли медосмотр')
         
@@ -544,13 +600,12 @@ def reports():
         with ps_tasks_col1:
             ps_tasks_cont = st.container(border=True)
             with ps_tasks_cont:
-                count = 0 
+                count = 0
                 tasks = Report_DB_tasks(PATH_DB+NAME_DB)
-                ps_percent = [None]*int(len(tasks.get_active_tasks()))
-                
+                ps_percent = {}
                 for count, i in enumerate(tasks.get_active_tasks()):
-                    ps_percent[count] = st.slider(str(count+1) + '. ' + i[0], 0, 100, int(i[1]), step=10, key=350+count)
-        
+                    ps_percent[i[0]] = st.slider(i[1], 0, 100, int(i[2]), step=10, key=350+count)
+                
         with ps_tasks_col2:        
             ps_another_cont = st.container(border=True)
             with ps_another_cont:
@@ -562,15 +617,17 @@ def reports():
                     another_incidents = st.toggle('Инциденты', key=323)
                     ps_text_incidents = st.text_area('Описание инцидента', disabled=not another_incidents, key=324)
         
+        # tasks
+        
         ps_report_save = st.button('Сохранить отчет', key=300, disabled=not flag_hour)
-        if ps_report_save:
-            peak_report_table = Report_DB_shift(PATH_DB+NAME_DB)
-            staff_amount = Report_DB_staff(PATH_DB+NAME_DB)
-            
-            #list_to_save = (today.strftime('%d.%m.%Y'), income_standard, income_matrix, amount_standard, amount_matrix, amount_import, unplaced, act_bel, act_import, ill, vocation, absent, staff_amount.get_mans_shift(5)-ill-vocation-absent, overtime, text_safety, procedure.get_burden(staff_amount.get_mans_shift(5)-ill-vocation-absent, income_standard+income_matrix*10), text_incidents)
 
+        if ps_report_save:
+            peak_report_table = Report_DB_peak_shift(PATH_DB+NAME_DB)
             
-            #peak_report_table.save_report(list_to_save, flag_report)         
+            list_to_save = (now_date, count_shift, ps_ill, ps_vocation, ps_abscent, ps_overtime, ps_medic, ps_s_docs, ps_s_lines, ps_s_things, ps_s_docs_ok, ps_s_acts, ps_m_docs, ps_m_lines, ps_m_things, ps_m_docs_ok, ps_m_acts, ps_i_docs, ps_i_lines, ps_i_things, ps_i_docs_ok, ps_i_acts, ps_text_safety, ps_text_incidents, json.dumps(ps_percent))
+            
+            peak_report_table.save_report(list_to_save, False)         
+            tasks.change_tasks(ps_percent)
             st.success('Отчет сохранен')
 
 
@@ -705,7 +762,7 @@ def staff():
             df_report = staff.df.merge(df_report)
 
             #TODO: сделать красивый вывод
-            st.table(df_report[df_report['shift'] == choose_man_num])
+            st.table(df_report)
 
     with staff_tab3:
         
@@ -898,7 +955,7 @@ def analitics():
         st.plotly_chart(fig_mot, use_container_width=400)
 
     with tab_shift:
-        report_shift = Report_DF_report_shift(repdb, 'report_shift', ['id', 'date_shift', 'of_day', 'shift_id', 'staff_shift', 'add', 'ill', 'vacation', 'absence', 'lines', 'pieces', 'sku', 'effect'])
+        report_shift = Report_DF_report_shift(repdb, 'report1_shift', ['id', 'date_shift', 'of_day', 'shift_id', 'staff_shift', 'add', 'ill', 'vacation', 'absence', 'lines', 'pieces', 'sku', 'effect'])
         
         list_for = []
 
