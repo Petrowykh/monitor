@@ -49,10 +49,8 @@ class Report_DB_report_shift(Report_DB):
             if flag:
                 return self.cursor.execute(f"DELETE FROM report_shift WHERE date='{list_db[1]}'")
             elif flag_dn:
-                print('-----', list_db1)
-                print(self.cursor.execute(f"SELECT date_shift from report_shift").fetchall())
-                self.cursor.execute(f"UPDATE report_shift SET internet_cars = {list_db1[1]}, internet_things = {list_db1[2]}, cars_time = {list_db1[3]} WHERE date_shift = {list_db1[0]}") 
-            self.cursor.execute("INSERT INTO report_shift (date_shift, nd, shift_id, mans, ill, vacation, absent, overtime, medic, lines_out, things_out, lines_in, things_in, lines_selected, things_selected, zone_save, zone_out, unloaded_warehouse, unloaded_logistic, internet_cars, internet_things, cars_time, place_begin, place_ngb, place_epal, place_created, place_executed, safety, incidents, volume, tasks) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", list_db)      
+                self.cursor.execute(f"UPDATE report_shift SET internet_cars = {list_db1[1]}, internet_things = {list_db1[2]}, cars_time = {list_db1[3]} WHERE date_shift = '{list_db1[0]}'") 
+            self.cursor.execute("INSERT INTO report_shift (date_shift, nd, shift_id, mans, ill, vacation, absent, overtime, medic, lines_out, things_out, lines_in, things_in, lines_selected, things_selected, zone_save, zone_out, unloaded_warehouse, unloaded_logistic, internet_cars, internet_things, cars_time, place_begin, place_ngb, place_epal, place_created, place_executed, safety, incidents, volume_region, volume_minsk, main_lines, val_lines, bal_lines, tasks) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", list_db)      
             self.connection.commit()
             
 class Report_DB_staff(Report_DB):

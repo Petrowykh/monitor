@@ -225,7 +225,7 @@ def reports():
         with ds_sh_col1:
             st.subheader(f'Отчет дневной смены за: {now_date}', divider='red')
         with ds_sh_col2:
-            flag_hour = True #if now_hour >= 8 and now_hour <= 9 else False
+            flag_hour = True if now_hour >= 20 and now_hour <= 21 else False
             ds_ns = st.selectbox('Начельник смены', staff.get_boss_staff(), key=101, disabled= not flag_hour)
         ds_staff_cont = st.container(border=True)
         with ds_staff_cont:
@@ -343,6 +343,7 @@ def reports():
         with ds_tasks_col1:
             ds_tasks_cont = st.container(border=True)
             with ds_tasks_cont:
+                st.text('Задачи')
                 count = 0
                 tasks = Report_DB_tasks(PATH_DB+NAME_DB)
                 ds_percent = {}
@@ -352,7 +353,7 @@ def reports():
         with ds_tasks_col2:   
             ds_another_cont = st.container(border=True)
             with ds_another_cont:
-                st.text('Сборка - остаток')
+                st.text('Сборка - остаток', help="Указываем в количетсве строк")
                 ds_lines_col1, ds_lines_col2, ds_lines_col3 = st.columns(3)
                 with ds_lines_col1:
                     ds_main_lines = st.text_input('ЦС', value=0, key=130)
@@ -375,12 +376,29 @@ def reports():
             flag_DN = True
             report_table = Report_DB_report_shift(PATH_DB+NAME_DB)
             
-            list_to_save = (now_date, flag_DN, staff.get_number_shift(ds_ns), count_shift, ds_ill, ds_vacation, ds_absent, ds_overtime, ds_medic, ds_out_lines, ds_out_things, ds_in_lines, ds_in_things, ds_selected_lines, ds_selected_things, ds_zone_save, ds_zone_out, ds_unloaded_warehouse, ds_unloaded_logistic, ds_internet_cars_evening, ds_interent_things_evening, ds_cars_evening, ds_place_begin, ds_place_ngb, ds_place_epal, ds_place_created, ds_place_executed, ds_text_safety, ds_text_incidents, 100, json.dumps(ds_percent))
+            list_to_save = (now_date, flag_DN, staff.get_number_shift(ds_ns), count_shift, ds_ill, ds_vacation, ds_absent, ds_overtime, ds_medic, ds_out_lines, ds_out_things, ds_in_lines, ds_in_things, ds_selected_lines, ds_selected_things, ds_zone_save, ds_zone_out, ds_unloaded_warehouse, ds_unloaded_logistic, ds_internet_cars_evening, ds_interent_things_evening, ds_cars_evening, ds_place_begin, ds_place_ngb, ds_place_epal, ds_place_created, ds_place_executed, ds_text_safety, ds_text_incidents, 0, 0, ds_main_lines, ds_val_lines, ds_bal_lines, json.dumps(ds_percent))
             
             list_to_save_internet = (now_date, ds_internet_cars_morning, ds_interent_things_morning, ds_cars_morning)
 
             report_table.save_report(list_to_save, list_to_save_internet, flag_DN, False)         
             tasks.change_tasks(ds_percent)
+
+            lll = list(list_to_save)
+
+            description = ['Дата', 'День/Ночь', 'Начальник смены', 'По штату', 'Больничный', 'Отпуск', 'Отсутствуют', 'Переработки', 'Медоосмотр', 'Исходящий строки', 'Исходящий штуки', 'Входящий строки', 'Входящий штуки', 'Отобрано строки', 'Отобрано штуки', 'Свободные ячейки хранение', 'Свободные ячейки отбор', 'Не загружено по вине склада', 'Не загружено по вине логистики', 'ИМ машин', 'ИМ штук', 'Незагружно вовремя', 'Начало смены', 'НГБ', 'EPAL', 'Создано', 'Выполнено', 'Безопасность', 'Инциденты', 'VR', 'VM', 'Не собрано строк ЦС', 'Не собрано строк "ценник"', 'Не собрано строк"балкон"', 'Задачи']
+
+            # Email
+            letter_begin = '<table style="font-family:Arial" border = 1><tbody>'
+            letter_body = ''
+            for count, param in enumerate(lll):
+                letter_body = letter_body + f'<tr><td colspan="2"><B>{description[count]}</B></td>'
+                letter_body = letter_body + f'<td style="width:50px">{param}</td></tr>'
+            letter_body = letter_begin + letter_body + '</tbody></table>'
+            procedure.send_letter('Отчет по дневной смене', letter_body, [
+                    'andrej.petrovyh@patio-minsk.by', 
+                    'vladimir.rabchenya@patio-minsk.by'
+                    ])
+
             st.success('Отчет сохранен')
         
 
@@ -388,9 +406,9 @@ def reports():
     with night_shift:
         ns_sh_col1, ns_sh_col2 = st.columns(2)
         with ns_sh_col1:
-            st.subheader(f'Отчет дневной смены за: {now_date}', divider='red')
+            st.subheader(f'Отчет ночной смены за: {now_date}', divider='red')
         with ns_sh_col2:
-            flag_hour = True if now_hour >= 20 and now_hour <= 21 else False
+            flag_hour = True if now_hour >= 8 and now_hour <= 9 else False
             ns_ns = st.selectbox('Начельник смены', staff.get_boss_staff(), key=201, disabled=not flag_hour)
         ns_staff_cont = st.container(border=True)
         with ns_staff_cont:
@@ -466,8 +484,17 @@ def reports():
        
         ns_tasks_col1,  ns_tasks_col2 = st.columns([1, 2])
         with ns_tasks_col1:
+            ns_another_cont1 = st.container(border=True)
+            with ns_another_cont1:
+                st.text('Объемы брутто, куб.м.', help='По информации от отдела экспедирования')
+                ns_volume_col1, ns_volume_col2 = st.columns(2)
+                with ns_volume_col1:
+                    ns_volume_region = st.text_input('Регионы', value=0, key=225)
+                with ns_volume_col2:
+                    ns_volume_minsk = st.text_input('Минск', value=0, key=226)
             ns_tasks_cont = st.container(border=True)
             with ns_tasks_cont:
+                st.text('Задачи')
                 count = 0
                 tasks = Report_DB_tasks(PATH_DB+NAME_DB)
                 ns_percent = {}
@@ -486,14 +513,7 @@ def reports():
                     ns_val_lines = st.text_input('Ценник', value=0, key=223)
                 with ns_lines_col3:    
                     ns_bal_lines = st.text_input('Балкон', value=0, key=224)
-            ns_another_cont1 = st.container(border=True)
-            with ns_another_cont1:
-                st.text('Объемы')
-                ns_volume_col1, ns_volume_col2 = st.columns(2)
-                with ns_volume_col1:
-                    ns_volume_region = st.text_input('Регионы', value=0, key=225)
-                with ns_volume_col2:
-                    ns_volume_minsk = st.text_input('Минск', value=0, key=226)
+           
             ns_another_cont2 = st.container(border=True)
             with ns_another_cont2:
                 ns_rem_col1, ns_rem_col2 = st.columns(2)
@@ -509,10 +529,26 @@ def reports():
             flag_DN = False
             report_table = Report_DB_report_shift(PATH_DB+NAME_DB)
             
-            list_to_save = (now_date, flag_DN, staff.get_number_shift(ns_ns), count_shift, ns_ill, ns_vacation, ns_abscent, ns_overtime, ns_medic, ns_out_lines, ns_out_things, ns_in_lines, ns_in_things, ns_selected_lines, ns_selected_things, ns_zone_save, ns_zone_out, ns_unloaded_warehouse, ns_unloaded_logistic, 0, 0, 0, ns_place_begin, ns_place_ngb, ns_place_epal, ns_place_created, ns_place_executed, ns_text_safety, ns_text_incidents, 100, json.dumps(ns_percent))
+            list_to_save = (now_date, flag_DN, staff.get_number_shift(ns_ns), count_shift, ns_ill, ns_vacation, ns_abscent, ns_overtime, ns_medic, ns_out_lines, ns_out_things, ns_in_lines, ns_in_things, ns_selected_lines, ns_selected_things, ns_zone_save, ns_zone_out, ns_unloaded_warehouse, ns_unloaded_logistic, 0, 0, 0, ns_place_begin, ns_place_ngb, ns_place_epal, ns_place_created, ns_place_executed, ns_text_safety, ns_text_incidents, ns_volume_region, ns_volume_minsk, ns_main_lines, ns_val_lines, ns_bal_lines, json.dumps(ns_percent))
             
             report_table.save_report(list_to_save, (), flag_DN, False)         
             tasks.change_tasks(ns_percent)
+
+            lll = list(list_to_save)
+
+            description = ['Дата', 'День/Ночь', 'Начальник смены', 'По штату', 'Больничный', 'Отпуск', 'Отсутствуют', 'Переработки', 'Медоосмотр', 'Исходящий строки', 'Исходящий штуки', 'Входящий строки', 'Входящий штуки', 'Отобрано строки', 'Отобрано штуки', 'Свободные ячейки хранение', 'Свободные ячейки отбор', 'Не загружено по вине склада', 'Не загружено по вине логистики', 'ИМ1', 'ИМ2', 'ИМ3', 'Начало смены', 'НГБ', 'EPAL', 'Создано', 'Выполнено', 'Безопасность', 'Инциденты', 'Объем регионы', 'Объем Минск', 'Не собрано строк ЦС', 'Не собрано строк "ценник"', 'Не собрано строк"балкон"', 'Задачи']
+
+            # Email
+            letter_begin = '<table style="font-family:Arial" border = 1><tbody>'
+            letter_body = ''
+            for count, param in enumerate(lll):
+                letter_body = letter_body + f'<tr><td colspan="2"><B>{description[count]}</B></td>'
+                letter_body = letter_body + f'<td style="width:50px">{param}</td></tr>'
+            letter_body = letter_begin + letter_body + '</tbody></table>'
+            procedure.send_letter('Отчет по ночной смене', letter_body, [
+                    'andrej.petrovyh@patio-minsk.by', 
+                    'vladimir.rabchenya@patio-minsk.by'
+                    ])
             st.success('Отчет сохранен')
 
     #peak shift
@@ -626,8 +662,22 @@ def reports():
             
             list_to_save = (now_date, count_shift, ps_ill, ps_vocation, ps_abscent, ps_overtime, ps_medic, ps_s_docs, ps_s_lines, ps_s_things, ps_s_docs_ok, ps_s_acts, ps_m_docs, ps_m_lines, ps_m_things, ps_m_docs_ok, ps_m_acts, ps_i_docs, ps_i_lines, ps_i_things, ps_i_docs_ok, ps_i_acts, ps_text_safety, ps_text_incidents, json.dumps(ps_percent))
             
+            description = ['Дата отчета', 'По штату', 'Больничный', 'Отпуск', 'Отсутствуют', 'Переработка', 'Медоосмотр', 'Стандартный документы', 'Стандартный строк', 'Стандартный штук', 'Стандартный принято', 'Стандартный акты', 'Срочный ТТН', 'Срочный строк', 'Срочный штук', 'Срочный принято', 'Срочный акты', 'Импорт документы', 'Импорт строк', 'Импорт штук', 'Импорт принято', 'Импорт акты', 'Безопасность', 'Инциденты', 'Задачи']
+
             peak_report_table.save_report(list_to_save, False)         
             tasks.change_tasks(ps_percent)
+            lll = list(list_to_save)
+            # Email
+            letter_begin = '<table style="font-family:Arial" border = 1><tbody>'
+            letter_body = ''
+            for count, param in enumerate(lll):
+                letter_body = letter_body + f'<tr><td colspan="2"><B>{description[count]}</B></td>'
+                letter_body = letter_body + f'<td style="width:50px">{param}</td></tr>'
+            letter_body = letter_begin + letter_body + '</tbody></table>'
+            procedure.send_letter('Отчет по пиковой смене', letter_body, [
+                    'andrej.petrovyh@patio-minsk.by', 
+                    'vladimir.rabchenya@patio-minsk.by'
+                    ])
             st.success('Отчет сохранен')
 
 
@@ -1032,7 +1082,7 @@ def analitics():
     with tab_check_list:
         list_check = []
         check_list = Report_DF_check_list(repdb, 'check_list', ['id', 'check_date', 'pick_zone', 'mez_zone', 'bal_zone', 'ramp_zone', 'trush_zone', 'pradius_zone', 'percent'])
-        check_list.df['check_date'] = pd.to_datetime(check_list.df['check_date'])
+        #check_list.df['check_date'] = pd.to_datetime(check_list.df['check_date'])
         q = check_list.df.shape[0]
         
         zones = []
@@ -1063,6 +1113,7 @@ def analitics():
                 }
             )
 
+            
             st.data_editor(
                 data_df,
                 column_config={
@@ -1073,10 +1124,16 @@ def analitics():
                         width=200
                         ),
                     },
-                hide_index=True,
+                hide_index=False,
             )
         with cl2:
-            st.line_chart(check_list.df.tail(20), x='check_date', y='percent')
+            # fig = go.Figure(data=[go.Scatter(x=data.index, y=data['Value'])])
+            # fig.update_xaxes(type='date', dtick="M1", tickformat='%b\n%Y')
+            # fig = go.Figure(data=[go.Scatter(x=check_list.df['check_date'].tail(5), y=check_list.df['percent'].tail(5))])
+            
+            # fig.update_xaxes(type='date', dtick="M1", tickformat='%b\n%Y')
+            fig = px.line(check_list.df.tail(15), range_y=[0, 100], x="check_date", y="percent", title='Процент уборки', labels={'check_date': 'Даты проверок', 'percent': 'Качество уборки в процентах'})
+            st.plotly_chart(fig, use_container_width=400)
 
 
 menu_dict = {
