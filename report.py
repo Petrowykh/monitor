@@ -218,14 +218,14 @@ def reports():
 
     #check_data = False
     flag_hour = False
-
+    
     #day shift
     with day_shift:
         ds_sh_col1, ds_sh_col2 = st.columns(2)
         with ds_sh_col1:
             st.subheader(f'Отчет дневной смены за: {now_date}', divider='red')
         with ds_sh_col2:
-            flag_hour = True if now_hour >= 20 and now_hour <= 21 else False
+            flag_hour = True #if now_hour >= 20 and now_hour <= 21 else False
             ds_ns = st.selectbox('Начельник смены', staff.get_boss_staff(), key=101, disabled= not flag_hour)
         ds_staff_cont = st.container(border=True)
         with ds_staff_cont:
@@ -234,6 +234,7 @@ def reports():
             ds_staff_col1, ds_staff_col2, ds_staff_col3, ds_staff_col4, ds_staff_col5 = st.columns(5)
             with ds_staff_col1:
                 ds_ill = st.number_input('Больничный', min_value=0, max_value=20, step=1, placeholder='кол-во', key=102)
+                st.session_state['ds_ill'] = ds_ill
             with ds_staff_col2:
                 ds_vacation= st.number_input('Отпуск', min_value=0, max_value=20, step=1, placeholder='кол-во', key=103)
             with ds_staff_col3:
@@ -893,7 +894,7 @@ def analitics():
         staff.df['dismiss'] = pd.to_datetime(staff.df['dismiss'], dayfirst=True)
         
         #TODO: определить месяц
-        list_for = ['01', '02', '03', '04', '05']
+        list_for = ['01', '02', '03', '04', '05', '06']
 
         with st.sidebar:
             all_house = st.toggle("Весь персонал", value=True)
