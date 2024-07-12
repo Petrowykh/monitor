@@ -55,7 +55,6 @@ def main():
                         page_icon="📊",
                         layout="wide")
 
-
     col_header1, col_header2 = st.columns([9, 1])
     with col_header1:
         st.image('img\logo.png')
@@ -75,7 +74,6 @@ def main():
                                 "list-columns-reverse", 
                                 'clipboard2-data-fill', 
                                 'gear-fill'], 
-        
                             menu_icon="cast", 
                             default_index=0, 
                             orientation="horizontal")
@@ -117,8 +115,6 @@ def info():
     
     with col_m5:
         st.metric(':man_dancing: Необходимое кол-во сотрудников', f'{int(STANDARD_GOODS*30*ONE_GOODS/1287*coef)} чел', f'{int(STANDARD_GOODS*30*ONE_GOODS/1287*coef)-123} чел')
-
-    
 
     tasks = Report_DB_tasks(PATH_DB+NAME_DB)
     st.subheader('Задачи', divider='red')
@@ -257,7 +253,7 @@ def reports():
             with ds_staff_col4:
                 ds_overtime = sni('Переработка', 'ds_overtime', 105)
             with ds_staff_col5:
-                ds_medic = sni('Медосмотр', 'ds_medic', 106, max=count_shift)
+                ds_medic = sni('Медосмотр', 'ds_medic', 106, max=count_shift+ds_overtime)
                 if count_shift-ds_ill-ds_vacation-ds_absent != ds_medic:
                     st.warning('Не все прошли медосмотр')
             
@@ -404,19 +400,19 @@ def reports():
 
             lll = list(list_to_save)
 
-            description = ['Дата', 'День/Ночь', 'Начальник смены', 'По штату', 'Больничный', 'Отпуск', 'Отсутствуют', 'Переработки', 'Медоосмотр', 'Исходящий строки', 'Исходящий штуки', 'Входящий строки', 'Входящий штуки', 'Отобрано строки', 'Отобрано штуки', 'Свободные ячейки хранение', 'Свободные ячейки отбор', 'Не загружено по вине склада', 'Не загружено по вине логистики', 'ИМ машин', 'ИМ штук', 'Незагружно вовремя', 'НГБ', 'EPAL', 'Создано', 'Выполнено', 'Безопасность', 'Инциденты', 'VR', 'VM', 'Не собрано строк ЦС', 'Не собрано строк "ценник"', 'Не собрано строк"балкон"', 'Задачи']
+            description = ['Дата', 'День', 'Начальник смены', 'По штату', 'Больничный', 'Отпуск', 'Отсутствуют', 'Переработки', 'Медоосмотр', 'Исходящий строки', 'Исходящий штуки', 'Входящий строки', 'Входящий штуки', 'Отобрано строки', 'Отобрано штуки', 'Свободные ячейки хранение', 'Свободные ячейки отбор', 'Не загружено по вине склада', 'Не загружено по вине логистики', 'Количество машин ИМ', 'Количетсво штук ИМ', 'Загружено не вовремя', 'Размещение НГБ', 'Размещение EPAL', 'создано', 'выполнено', 'Меры безопасности', 'Инциденты', 'Объем регионы', 'Объем Минск', 'Остаток строк ЦС', 'Остаток строк "ценник"', 'Остаток строк "балкон"', 'Задачи']
 
             # Email
-            letter_begin = '<table style="font-family:Arial" border = 1><tbody>'
+            letter_begin = '<table style="font-family:Arial" border = "1" border-collapse = "collapse"><tbody>'
             letter_body = ''
             for count, param in enumerate(lll):
                 letter_body = letter_body + f'<tr><td colspan="2"><B>{description[count]}</B></td>'
-                letter_body = letter_body + f'<td style="width:50px">{param if count != 2 else staff.get_boss_name(param)}</td></tr>'
+                letter_body = letter_body + f'<td style="width:100px">{param if count != 2 else staff.get_boss_name(param)}</td></tr>'
                 letter_comment = f'<br><B>Комментарий НС:</b><br>{ds_comment_text}'
-            letter_body = letter_begin + letter_body + letter_comment + '</tbody></table>'
+            letter_body = letter_begin + letter_body + '</tbody></table>' + letter_comment
             procedure.send_letter('Отчет по дневной смене', letter_body, [
                     'andrej.petrovyh@patio-minsk.by', 
-                    'al.service@patio-minsk.by'
+                    #'al.service@patio-minsk.by'
                     ])
             for key in st.session_state.keys():
                 del st.session_state[key]
@@ -449,7 +445,7 @@ def reports():
             with ns_staff_col4: 
                 ns_overtime = sni('Переработка', 'ns_overtime', 205)
             with ns_staff_col5:
-                ns_medic = sni('Медосмотр', 'ns_medic', 206, max=count_shift - 1)
+                ns_medic = sni('Медосмотр', 'ns_medic', 206, max=count_shift+ns_overtime)
                 if count_shift-ns_ill-ns_vacation-ns_absent != ns_medic:
                     st.warning('Не все прошли медосмотр')
             
@@ -564,7 +560,7 @@ def reports():
 
             lll = list(list_to_save)
 
-            description = ['Дата', 'День/Ночь', 'Начальник смены', 'По штату', 'Больничный', 'Отпуск', 'Отсутствуют', 'Переработки', 'Медоосмотр', 'Исходящий строки', 'Исходящий штуки', 'Входящий строки', 'Входящий штуки', 'Отобрано строки', 'Отобрано штуки', 'Свободные ячейки хранение', 'Свободные ячейки отбор', 'Не загружено по вине склада', 'Не загружено по вине логистики', 'ИМ1', 'ИМ2', 'ИМ3', 'НГБ', 'EPAL', 'Создано', 'Выполнено', 'Безопасность', 'Инциденты', 'Объем регионы', 'Объем Минск', 'Не собрано строк ЦС', 'Не собрано строк "ценник"', 'Не собрано строк"балкон"', 'Задачи']
+            description = ['Дата', 'Ночь', 'Начальник смены', 'По штату', 'Больничный', 'Отпуск', 'Отсутствуют', 'Переработки', 'Медоосмотр', 'Исходящий строки', 'Исходящий штуки', 'Входящий строки', 'Входящий штуки', 'Отобрано строки', 'Отобрано штуки', 'Свободные ячейки хранение', 'Свободные ячейки отбор', 'Не загружено по вине склада', 'Не загружено по вине логистики', 'Количество машин ИМ', 'Количетсво штук ИМ', 'Загружено не вовремяИМ3', 'Размещение НГБ', 'Размещение EPAL', 'создано', 'выполнено', 'Меры безопасности', 'Инциденты', 'Объем регионы', 'Объем Минск', 'Остаток строк ЦС', 'Остаток строк "ценник"', 'Остаток строк "балкон"', 'Задачи']
 
             # Email
             letter_begin = '<table style="font-family:Arial" border = 1><tbody>'
@@ -573,7 +569,7 @@ def reports():
                 letter_body = letter_body + f'<tr><td colspan="2"><B>{description[count]}</B></td>'
                 letter_body = letter_body + f'<td style="width:50px">{param if count != 2 else staff.get_boss_name(param)}</td></tr>'
                 letter_comment = f'<br><B>Комментарий НС:</b><br>{ns_comment_text}'
-            letter_body = letter_begin + letter_body + letter_comment + '</tbody></table>'
+            letter_body = letter_begin + letter_body + '</tbody></table>' + letter_comment
             procedure.send_letter('Отчет по ночной смене', letter_body, [
                     'andrej.petrovyh@patio-minsk.by', 
                     'al.service@patio-minsk.by'
@@ -605,7 +601,7 @@ def reports():
             with ps_staff_col4:
                 ps_overtime = sni('Переработка', 'ps_overtime', 304)
             with ps_staff_col5:
-                ps_medic = sni('Медосмотр', 'ps_medic', 305, max=count_shift-1)
+                ps_medic = sni('Медосмотр', 'ps_medic', 305, max=count_shift+ps_overtime)
                 if count_shift-ps_ill-ps_vacation-ps_absent != ps_medic:
                     st.warning('Не все прошли медосмотр')
         
@@ -702,11 +698,14 @@ def reports():
             for count, param in enumerate(lll):
                 letter_body = letter_body + f'<tr><td colspan="2"><B>{description[count]}</B></td>'
                 letter_body = letter_body + f'<td style="width:50px">{param}</td></tr>'
-            letter_body = letter_begin + letter_body + '</tbody></table>'
+                letter_comment = f'<br><B>Комментарий НС:</b><br>{ns_comment_text}'
+            letter_body = letter_begin + letter_body + '</tbody></table>' + letter_comment
             procedure.send_letter('Отчет по пиковой смене', letter_body, [
                     'andrej.petrovyh@patio-minsk.by', 
                     'al.service@patio-minsk.by'
                     ])
+            for key in st.session_state.keys():
+                del st.session_state[key]
             st.success('Отчет сохранен')
 
 
@@ -718,8 +717,6 @@ def reports():
         if flag_checklist:
             st.success('отчет создан')
 
-        #TODO: vizualization check list
-        
         col_check_list, col_viz = st.columns([3,1])
         with col_check_list:
             with open('utils/check_list.json', encoding="utf-8") as f:
@@ -782,10 +779,7 @@ def staff():
     staff.df['date_in'] = pd.to_datetime(staff.df['date_in'], dayfirst=True)
     staff.df['dismiss'] = pd.to_datetime(staff.df['dismiss'], dayfirst=True)
     
-    #TODO: определить месяц
-    list_for = ['01', '02', '03', '04', '05']
-
-    
+     
     staff_tab3, staff_tab2, staff_tab1 = st.tabs(['Выход', 'УРВ', 'Штат'])
    
     with staff_tab1:
@@ -840,7 +834,6 @@ def staff():
             #st.table(staff.df)
             df_report = staff.df.merge(df_report)
 
-            #TODO: сделать красивый вывод
             st.table(df_report)
 
     with staff_tab3:
@@ -1046,26 +1039,27 @@ def analitics():
         report_shift.df['mans'] = report_shift.df['staff_shift'] - report_shift.df['ill'] - report_shift.df['vacation'] - report_shift.df['absence'] + report_shift.df['add']
         report_shift.df['effect'] = report_shift.df['lines']/report_shift.df['mans']
 
-
-        shift_col1, shift_col2, shift_col3 = st.columns([4, 1, 4])
-        with shift_col1:    
-            years_period = st.multiselect(
-                'Года:', 
-                sorted(report_shift.df['year_p'].unique()),
-                default=report_shift.df['year_p'].unique()[-1], 
-                disabled=flag_tab_staff
-            )
-        
-            list_for = report_shift.df['month_p'][report_shift.df['year_p'].isin(years_period)].unique()
-            month_period = st.multiselect(
-                'Месяцы',
-                sorted(list_for),
-                default=list_for,
-                disabled=flag_tab_staff
-            )
-        with shift_col3:
-            day_night = st.radio('День/ночь', ['День', 'Ночь'])
-            day_flag = True if day_night == 'День' else False
+        shidt_cont = st.container(border=True)
+        with shidt_cont:
+            shift_col1, shift_col2, shift_col3 = st.columns([4, 1, 4])
+            with shift_col1:    
+                years_period = st.multiselect(
+                    'Года:', 
+                    sorted(report_shift.df['year_p'].unique()),
+                    default=report_shift.df['year_p'].unique()[-1], 
+                    disabled=flag_tab_staff
+                )
+            
+                list_for = report_shift.df['month_p'][report_shift.df['year_p'].isin(years_period)].unique()
+                month_period = st.multiselect(
+                    'Месяцы',
+                    sorted(list_for),
+                    default=list_for,
+                    disabled=flag_tab_staff
+                )
+            with shift_col3:
+                day_night = st.radio('День/ночь', ['День', 'Ночь'])
+                day_flag = True if day_night == 'День' else False
 
         chart_data = report_shift.df.pivot_table(index=['year_p', 'month_p', 'of_day', 'shift_id'],
                                                 values=['lines', 'effect'],
@@ -1076,8 +1070,6 @@ def analitics():
         col1, col2 = st.columns(2)
         with col1:
             st.write('Количество строк')
-                                                    
-            #print (chart_data['lines'][(chart_data['shift_id'] == 1) & (chart_data['of_day'] == day_flag) & (chart_data['year_p'].isin(years_period)) & (chart_data['month_p'].isin(month_period))])
         
             fig = go.Figure(data=[
                 go.Bar(name='Каплич', x=x_, y=chart_data['lines'][(chart_data['shift_id'] == 1) & (chart_data['of_day'] == day_flag) & (chart_data['year_p'].isin(years_period)) & (chart_data['month_p'].isin(month_period))]),
@@ -1097,17 +1089,14 @@ def analitics():
                 go.Bar(name='Ситниченко', x=x_,y=chart_data['effect'][(chart_data['shift_id'] == 2) & (chart_data['of_day'] == day_flag) & (chart_data['year_p'].isin(years_period)) & (chart_data['month_p'].isin(month_period))]),
                 go.Bar(name='Юролайть', x=x_, y=chart_data['effect'][(chart_data['shift_id'] == 3) & (chart_data['of_day'] == day_flag) & (chart_data['year_p'].isin(years_period)) & (chart_data['month_p'].isin(month_period))]),
                 go.Bar(name='Гнедой', x=x_, y=chart_data['effect'][(chart_data['shift_id'] == 4) & (chart_data['of_day'] == day_flag) & (chart_data['year_p'].isin(years_period)) & (chart_data['month_p'].isin(month_period))]),
-                #go.addLine(y = 300)   #.Line(x=x_, y=[300, 300, 300, 300])
+                
             ])
-            # Change the bar mode
-            #fig.add_hline(y=301, line_dash="dot", row=3, col="all")
-            fig.add_hrect(y0=0, y1=300 if day_flag else 150, line_width=0, fillcolor="yellow", opacity=0.3)
+            fig.add_hline(y=300 if day_flag else 150, line_color="yellow", line_dash="dot", line_width=5)
             st.plotly_chart(fig, use_container_width=400)
 
     with tab_check_list:
         list_check = []
         check_list = Report_DF_check_list(repdb, 'check_list', ['id', 'check_date', 'pick_zone', 'mez_zone', 'bal_zone', 'ramp_zone', 'trush_zone', 'pradius_zone', 'percent'])
-        #check_list.df['check_date'] = pd.to_datetime(check_list.df['check_date'])
         q = check_list.df.shape[0]
         
         zones = []
